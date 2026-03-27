@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoFlow — Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Lucide Icons (lightweight, pro SVG icons) -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-head">
+      <a href="../projet site/index.html" class="sb-logo">Auto<span>Flow</span></a>
+    </div>
+
+    <nav class="sb-nav">
+      <a href="#" class="sb-link active" data-page="overview">
+        <i data-lucide="layout-dashboard"></i> Vue d'ensemble
+      </a>
+      <a href="#" class="sb-link" data-page="workflows">
+        <i data-lucide="git-branch"></i> Workflows
+      </a>
+      <a href="#" class="sb-link" data-page="ai">
+        <i data-lucide="brain"></i> Intelligence IA
+      </a>
+      <a href="#" class="sb-link" data-page="analytics">
+        <i data-lucide="bar-chart-3"></i> Analytics
+      </a>
+
+      <div class="sb-divider"></div>
+      <div class="sb-label">Outils</div>
+
+      <a href="#" class="sb-link" data-page="integrations">
+        <i data-lucide="plug"></i> Intégrations
+      </a>
+      <a href="#" class="sb-link" data-page="leads">
+        <i data-lucide="users"></i> Leads CRM
+      </a>
+      <a href="#" class="sb-link" data-page="emails">
+        <i data-lucide="mail"></i> Emails
+      </a>
+      <a href="#" class="sb-link" data-page="scheduler">
+        <i data-lucide="calendar"></i> Planificateur
+      </a>
+
+      <div class="sb-divider"></div>
+      <div class="sb-label">Compte</div>
+
+      <a href="#" class="sb-link" data-page="clients">
+        <i data-lucide="building-2"></i> Clients
+      </a>
+      <a href="#" class="sb-link" data-page="settings">
+        <i data-lucide="settings"></i> Paramètres
+      </a>
+    </nav>
+
+    <div class="sb-footer">
+      <div class="sb-avatar">A</div>
+      <div class="sb-user-info">
+        <div class="sb-user-name">Admin</div>
+        <div class="sb-user-role">Business</div>
+      </div>
+      <button class="sb-more" title="Options"><i data-lucide="more-horizontal"></i></button>
+    </div>
+  </aside>
+
+  <!-- Mobile overlay -->
+  <div class="sidebar-overlay" id="sb-overlay"></div>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <button class="topbar-toggle" id="sb-toggle" aria-label="Menu">
+      <i data-lucide="menu"></i>
+    </button>
+    <h1 class="topbar-title" id="page-title">Vue d'ensemble</h1>
+    <div class="topbar-actions">
+      <div class="sys-status"><span class="sys-dot"></span> Opérationnel</div>
+      <button class="topbar-icon" title="Recherche"><i data-lucide="search"></i></button>
+      <button class="topbar-icon notif-btn" title="Notifications">
+        <i data-lucide="bell"></i>
+        <span class="notif-dot"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ===== OVERVIEW ===== -->
+    <div class="page active" id="page-overview">
+
+      <!-- Greeting -->
+      <div class="greeting">
+        <div>
+          <h2 class="greeting-title">Bonjour, Maxence</h2>
+          <p class="greeting-sub">Voici le résumé d'activité de votre plateforme.</p>
+        </div>
+        <div class="greeting-date" id="current-date"></div>
+      </div>
+
+      <!-- KPI -->
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-top">
+            <span class="kpi-label">Tâches automatisées</span>
+            <i data-lucide="zap" class="kpi-ic"></i>
+          </div>
+          <div class="kpi-val" data-count="48291">0</div>
+          <div class="kpi-change up">+12.4% vs semaine précédente</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top">
+            <span class="kpi-label">Taux de succès</span>
+            <i data-lucide="check-circle" class="kpi-ic"></i>
+          </div>
+          <div class="kpi-val">99.8%</div>
+          <div class="kpi-change up">Stable</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top">
+            <span class="kpi-label">Workflows actifs</span>
+            <i data-lucide="git-branch" class="kpi-ic"></i>
+          </div>
+          <div class="kpi-val" data-count="127">0</div>
+          <div class="kpi-change up">+8 ce mois</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top">
+            <span class="kpi-label">Temps économisé</span>
+            <i data-lucide="clock" class="kpi-ic"></i>
+          </div>
+          <div class="kpi-val"><span data-count="62">0</span>h</div>
+          <div class="kpi-change up">+18% vs mois dernier</div>
+        </div>
+      </div>
+
+      <!-- ROW 2: chart + workflows -->
+      <div class="grid-2">
+        <div class="card chart-card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Activité</div>
+              <div class="card-sub">7 derniers jours</div>
+            </div>
+            <div class="tab-group">
+              <button class="tab active">7j</button>
+              <button class="tab">30j</button>
+              <button class="tab">90j</button>
+            </div>
+          </div>
+          <div class="chart">
+            <div class="chart-bars">
+              <div class="bar-col"><div class="bar" style="height:55%"></div><span>L</span></div>
+              <div class="bar-col"><div class="bar" style="height:72%"></div><span>M</span></div>
+              <div class="bar-col"><div class="bar" style="height:48%"></div><span>M</span></div>
+              <div class="bar-col"><div class="bar" style="height:88%"></div><span>J</span></div>
+              <div class="bar-col"><div class="bar" style="height:65%"></div><span>V</span></div>
+              <div class="bar-col"><div class="bar" style="height:42%"></div><span>S</span></div>
+              <div class="bar-col"><div class="bar" style="height:95%"></div><span>D</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Workflows</div>
+            <a href="#" class="card-link">Tout voir</a>
+          </div>
+          <div class="list">
+            <div class="list-item">
+              <div class="list-dot green"></div>
+              <div class="list-body">
+                <div class="list-name">Email → CRM → Slack</div>
+                <div class="list-meta">842 exécutions</div>
+              </div>
+              <span class="badge green">Actif</span>
+            </div>
+            <div class="list-item">
+              <div class="list-dot blue"></div>
+              <div class="list-body">
+                <div class="list-name">Leads qualification IA</div>
+                <div class="list-meta">234 exécutions</div>
+              </div>
+              <span class="badge green">Actif</span>
+            </div>
+            <div class="list-item">
+              <div class="list-dot amber"></div>
+              <div class="list-body">
+                <div class="list-name">Rapport hebdo Notion</div>
+                <div class="list-meta">Planifié · dim 09:00</div>
+              </div>
+              <span class="badge amber">Planifié</span>
+            </div>
+            <div class="list-item">
+              <div class="list-dot blue"></div>
+              <div class="list-body">
+                <div class="list-name">Facturation Stripe auto</div>
+                <div class="list-meta">128 exécutions</div>
+              </div>
+              <span class="badge green">Actif</span>
+            </div>
+            <div class="list-item">
+              <div class="list-dot red"></div>
+              <div class="list-body">
+                <div class="list-name">Sync HubSpot ↔ Drive</div>
+                <div class="list-meta">Erreur détectée</div>
+              </div>
+              <span class="badge red">Erreur</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 3: AI + integrations + log -->
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Assistant IA</div>
+            <div class="live-dot"><span class="sys-dot"></span> En ligne</div>
+          </div>
+          <div class="ai-feed" id="ai-feed">
+            <div class="ai-msg bot">
+              <span class="ai-role">AutoFlow IA</span>
+              47 emails analysés. 12 leads qualifiés détectés et ajoutés au CRM.
+            </div>
+            <div class="ai-msg bot">
+              <span class="ai-role">AutoFlow IA</span>
+              Tickets créés. Équipe notifiée via Slack.
+            </div>
+            <div class="ai-msg user">Combien de temps gagné aujourd'hui ?</div>
+            <div class="ai-msg bot">
+              <span class="ai-role">AutoFlow IA</span>
+              4.2h économisées. ROI estimé : +€340.
+            </div>
+          </div>
+          <div class="ai-input">
+            <input type="text" placeholder="Demander à l'IA…" id="ai-inp">
+            <button id="ai-send"><i data-lucide="arrow-up"></i></button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Intégrations</div>
+            <a href="#" class="card-link">Gérer</a>
+          </div>
+          <div class="list">
+            <div class="list-item"><div class="int-ic"><i data-lucide="message-square"></i></div><div class="list-body"><div class="list-name">Slack</div></div><span class="badge green">OK</span></div>
+            <div class="list-item"><div class="int-ic"><i data-lucide="mail"></i></div><div class="list-body"><div class="list-name">Gmail</div></div><span class="badge green">OK</span></div>
+            <div class="list-item"><div class="int-ic"><i data-lucide="building-2"></i></div><div class="list-body"><div class="list-name">Salesforce</div></div><span class="badge green">OK</span></div>
+            <div class="list-item"><div class="int-ic"><i data-lucide="credit-card"></i></div><div class="list-body"><div class="list-name">Stripe</div></div><span class="badge green">OK</span></div>
+            <div class="list-item"><div class="int-ic"><i data-lucide="file-text"></i></div><div class="list-body"><div class="list-name">Notion</div></div><span class="badge amber">Lent</span></div>
+            <div class="list-item"><div class="int-ic"><i data-lucide="book-open"></i></div><div class="list-body"><div class="list-name">HubSpot</div></div><span class="badge red">Erreur</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Activité récente</div>
+            <a href="#" class="card-link">Tout voir</a>
+          </div>
+          <div class="list log-list">
+            <div class="list-item"><div class="log-ic green"><i data-lucide="check"></i></div><div class="list-body"><div class="list-name">Workflow Email → CRM exécuté</div><div class="list-meta">Il y a 2 min</div></div></div>
+            <div class="list-item"><div class="log-ic blue"><i data-lucide="brain"></i></div><div class="list-body"><div class="list-name">IA : 3 leads qualifiés</div><div class="list-meta">Il y a 8 min</div></div></div>
+            <div class="list-item"><div class="log-ic amber"><i data-lucide="alert-triangle"></i></div><div class="list-body"><div class="list-name">Sync HubSpot ralentie</div><div class="list-meta">Il y a 22 min</div></div></div>
+            <div class="list-item"><div class="log-ic green"><i data-lucide="send"></i></div><div class="list-body"><div class="list-name">Notification Slack envoyée</div><div class="list-meta">Il y a 35 min</div></div></div>
+            <div class="list-item"><div class="log-ic blue"><i data-lucide="file-plus"></i></div><div class="list-body"><div class="list-name">Ticket CRM #1284 créé</div><div class="list-meta">Il y a 1h</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 4: Pipeline + usage -->
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Pipeline Leads</div>
+              <div class="card-sub">Cette semaine · qualifiés par IA</div>
+            </div>
+          </div>
+          <div class="pipeline">
+            <div class="pipe-col">
+              <div class="pipe-head">Nouveaux <span>12</span></div>
+              <div class="pipe-card">
+                <div class="pipe-name">Sophie Martin</div>
+                <div class="pipe-co">Startup Tech · Paris</div>
+                <div class="pipe-bar"><div style="width:88%"></div></div>
+                <div class="pipe-score">Score 88</div>
+              </div>
+              <div class="pipe-card">
+                <div class="pipe-name">Pierre Dubois</div>
+                <div class="pipe-co">PME · Lyon</div>
+                <div class="pipe-bar"><div style="width:72%"></div></div>
+                <div class="pipe-score">Score 72</div>
+              </div>
+            </div>
+            <div class="pipe-col">
+              <div class="pipe-head">Qualifiés <span>8</span></div>
+              <div class="pipe-card highlight">
+                <div class="pipe-name">Marie Rousseau</div>
+                <div class="pipe-co">SaaS B2B · Nantes</div>
+                <div class="pipe-bar hot"><div style="width:97%"></div></div>
+                <div class="pipe-score">Score 97</div>
+              </div>
+            </div>
+            <div class="pipe-col">
+              <div class="pipe-head">Contactés <span>5</span></div>
+              <div class="pipe-card">
+                <div class="pipe-name">Alice Bernard</div>
+                <div class="pipe-co">Conseil · Strasbourg</div>
+                <div class="pipe-score">Email envoyé · il y a 2j</div>
+              </div>
+            </div>
+            <div class="pipe-col">
+              <div class="pipe-head">Convertis <span>3</span></div>
+              <div class="pipe-card success">
+                <div class="pipe-name">Lucas Simon</div>
+                <div class="pipe-co">Tech · Paris</div>
+                <div class="pipe-score">Client · Plan Business</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Utilisation</div>
+            <span class="badge green">Business</span>
+          </div>
+          <div class="usage">
+            <div class="usage-item">
+              <div class="usage-row"><span>Tâches</span><span>48 291 / 50 000</span></div>
+              <div class="usage-bar"><div class="usage-fill amber" style="width:97%"></div></div>
+            </div>
+            <div class="usage-item">
+              <div class="usage-row"><span>Workflows</span><span>127 / illimité</span></div>
+              <div class="usage-bar"><div class="usage-fill blue" style="width:50%"></div></div>
+            </div>
+            <div class="usage-item">
+              <div class="usage-row"><span>Intégrations</span><span>6 / 500+</span></div>
+              <div class="usage-bar"><div class="usage-fill green" style="width:8%"></div></div>
+            </div>
+            <div class="usage-item">
+              <div class="usage-row"><span>Stockage IA</span><span>2.1 Go / 10 Go</span></div>
+              <div class="usage-bar"><div class="usage-fill blue" style="width:21%"></div></div>
+            </div>
+          </div>
+          <div class="usage-footer">
+            <span>Renouvellement le 15 avril 2026</span>
+            <a href="../projet site/pricing.html" class="card-link">Gérer le plan</a>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /overview -->
+
+    <!-- ===== PLACEHOLDER PAGES ===== -->
+    <div class="page" id="page-workflows"><div class="ph"><i data-lucide="git-branch" class="ph-ic"></i><h2>Workflows</h2><p>Créez, gérez et supervisez vos workflows automatisés.</p><span class="ph-tag">Backend à venir</span></div></div>
+    <div class="page" id="page-ai"><div class="ph"><i data-lucide="brain" class="ph-ic"></i><h2>Intelligence IA</h2><p>Configurez les modèles IA qui pilotent vos automatisations.</p><span class="ph-tag">Backend à venir</span></div></div>
+    <div class="page" id="page-analytics"><div class="ph"><i data-lucide="bar-chart-3" class="ph-ic"></i><h2>Analytics</h2><p>Tableaux de bord, KPIs et rapports personnalisés.</p><span class="ph-tag">Backend à venir</span></div></div>
+    <div class="page" id="page-integrations"><div class="ph"><i data-lucide="plug" class="ph-ic"></i><h2>Intégrations</h2><p>Connectez et gérez vos 500+ intégrations.</p><span class="ph-tag">Backend à venir</span></div></div>
+    <div class="page" id="page-leads">
+
+      <!-- CRM TABS -->
+      <div class="crm-tabs">
+        <button class="crm-tab active" data-crm="inbox"><i data-lucide="inbox"></i> Inbox</button>
+        <button class="crm-tab" data-crm="pipeline"><i data-lucide="columns"></i> Pipeline</button>
+        <button class="crm-tab" data-crm="config"><i data-lucide="sliders"></i> Configuration</button>
+      </div>
+
+      <!-- ===== INBOX ===== -->
+      <div class="crm-panel active" id="crm-inbox">
+        <!-- Filters -->
+        <div class="inbox-toolbar">
+          <div class="inbox-filters">
+            <button class="inbox-filter active">Tous <span class="fcount">24</span></button>
+            <button class="inbox-filter">Leads <span class="fcount">12</span></button>
+            <button class="inbox-filter">Support <span class="fcount">7</span></button>
+            <button class="inbox-filter">Spam <span class="fcount">5</span></button>
+          </div>
+          <div class="inbox-search">
+            <i data-lucide="search"></i>
+            <input type="text" placeholder="Rechercher un email…">
+          </div>
+        </div>
+
+        <!-- Email list -->
+        <div class="inbox-list">
+          <div class="inbox-item lead-hot" data-contact="1">
+            <div class="inbox-check"><input type="checkbox"></div>
+            <div class="inbox-sender">
+              <div class="inbox-avatar">SM</div>
+              <div>
+                <div class="inbox-name">Sophie Martin</div>
+                <div class="inbox-company">Startup Tech · Paris</div>
+              </div>
+            </div>
+            <div class="inbox-preview">
+              <div class="inbox-subject">Demande de démo AutoFlow</div>
+              <div class="inbox-snippet">Bonjour, nous cherchons à automatiser notre process de qualification de leads et souhaitons planifier une démo…</div>
+            </div>
+            <div class="inbox-meta">
+              <span class="ia-score high">Score 92</span>
+              <span class="ia-tag lead">Lead</span>
+              <span class="inbox-time">Il y a 12 min</span>
+            </div>
+          </div>
+
+          <div class="inbox-item lead-hot" data-contact="2">
+            <div class="inbox-check"><input type="checkbox"></div>
+            <div class="inbox-sender">
+              <div class="inbox-avatar">MR</div>
+              <div>
+                <div class="inbox-name">Marie Rousseau</div>
+                <div class="inbox-company">SaaS B2B · Nantes</div>
+              </div>
+            </div>
+            <div class="inbox-preview">
+              <div class="inbox-subject">Intéressée par le plan Business</div>
+              <div class="inbox-snippet">Suite à notre échange lors du salon Tech4Biz, je souhaiterais en savoir plus sur vos tarifs entreprise…</div>
+            </div>
+            <div class="inbox-meta">
+              <span class="ia-score high">Score 97</span>
+              <span class="ia-tag lead">Lead</span>
+              <span class="inbox-time">Il y a 28 min</span>
+            </div>
+          </div>
+
+          <div class="inbox-item" data-contact="3">
+            <div class="inbox-check"><input type="checkbox"></div>
+            <div class="inbox-sender">
+              <div class="inbox-avatar">PD</div>
+              <div>
+                <div class="inbox-name">Pierre Dubois</div>
+                <div class="inbox-company">PME · Lyon</div>
+              </div>
+            </div>
+            <div class="inbox-preview">
+              <div class="inbox-subject">Question sur les intégrations Salesforce</div>
+              <div class="inbox-snippet">Pouvez-vous me confirmer que votre plateforme supporte la synchronisation bidirectionnelle avec Salesforce…</div>
+            </div>
+            <div class="inbox-meta">
+              <span class="ia-score mid">Score 68</span>
+              <span class="ia-tag lead">Lead</span>
+              <span class="inbox-time">Il y a 1h</span>
+            </div>
+          </div>
+
+          <div class="inbox-item" data-contact="4">
+            <div class="inbox-check"><input type="checkbox"></div>
+            <div class="inbox-sender">
+              <div class="inbox-avatar">JP</div>
+              <div>
+                <div class="inbox-name">Jean-Paul Moreau</div>
+                <div class="inbox-company">Industrie · Toulouse</div>
+              </div>
+            </div>
+            <div class="inbox-preview">
+              <div class="inbox-subject">Problème de connexion Slack</div>
+              <div class="inbox-snippet">L'intégration Slack que nous avons configurée la semaine dernière ne fonctionne plus depuis ce matin…</div>
+            </div>
+            <div class="inbox-meta">
+              <span class="ia-score low">Score 15</span>
+              <span class="ia-tag support">Support</span>
+              <span class="inbox-time">Il y a 2h</span>
+            </div>
+          </div>
+
+          <div class="inbox-item" data-contact="5">
+            <div class="inbox-check"><input type="checkbox"></div>
+            <div class="inbox-sender">
+              <div class="inbox-avatar">CL</div>
+              <div>
+                <div class="inbox-name">Camille Laurent</div>
+                <div class="inbox-company">Grand groupe · Bordeaux</div>
+              </div>
+            </div>
+            <div class="inbox-preview">
+              <div class="inbox-subject">RFP - Automatisation processus RH</div>
+              <div class="inbox-snippet">Nous lançons un appel d'offre pour automatiser nos processus d'onboarding et souhaitons inclure AutoFlow…</div>
+            </div>
+            <div class="inbox-meta">
+              <span class="ia-score high">Score 95</span>
+              <span class="ia-tag lead">Lead</span>
+              <span class="inbox-time">Il y a 3h</span>
+            </div>
+          </div>
+
+          <div class="inbox-item read">
+            <div class="inbox-check"><input type="checkbox"></div>
+            <div class="inbox-sender">
+              <div class="inbox-avatar">AB</div>
+              <div>
+                <div class="inbox-name">Alice Bernard</div>
+                <div class="inbox-company">Conseil · Strasbourg</div>
+              </div>
+            </div>
+            <div class="inbox-preview">
+              <div class="inbox-subject">Re: Suivi de notre échange</div>
+              <div class="inbox-snippet">Merci pour les informations. Nous reviendrons vers vous après notre comité de direction la semaine prochaine…</div>
+            </div>
+            <div class="inbox-meta">
+              <span class="ia-score mid">Score 55</span>
+              <span class="ia-tag lead">Lead</span>
+              <span class="inbox-time">Hier</span>
+            </div>
+          </div>
+
+          <div class="inbox-item read spam">
+            <div class="inbox-check"><input type="checkbox"></div>
+            <div class="inbox-sender">
+              <div class="inbox-avatar">NL</div>
+              <div>
+                <div class="inbox-name">Newsletter Pro</div>
+                <div class="inbox-company">Marketing</div>
+              </div>
+            </div>
+            <div class="inbox-preview">
+              <div class="inbox-subject">🎉 Offre spéciale -50% sur nos services</div>
+              <div class="inbox-snippet">Profitez de notre offre exceptionnelle limitée dans le temps sur tous nos packages premium…</div>
+            </div>
+            <div class="inbox-meta">
+              <span class="ia-score none">Score 3</span>
+              <span class="ia-tag spam-tag">Spam</span>
+              <span class="inbox-time">Hier</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PIPELINE ===== -->
+      <div class="crm-panel" id="crm-pipeline">
+        <div class="kanban">
+          <div class="kanban-col">
+            <div class="kanban-head"><span class="kanban-dot new"></span> Nouveau <span class="kanban-count">4</span></div>
+            <div class="kanban-cards">
+              <div class="kanban-card" data-contact="1">
+                <div class="kc-name">Sophie Martin</div>
+                <div class="kc-co">Startup Tech · Paris</div>
+                <div class="kc-row"><span class="ia-score high">92</span><span class="kc-time">Il y a 12 min</span></div>
+                <div class="kc-subject">Demande de démo AutoFlow</div>
+              </div>
+              <div class="kanban-card" data-contact="5">
+                <div class="kc-name">Camille Laurent</div>
+                <div class="kc-co">Grand groupe · Bordeaux</div>
+                <div class="kc-row"><span class="ia-score high">95</span><span class="kc-time">Il y a 3h</span></div>
+                <div class="kc-subject">RFP - Automatisation RH</div>
+              </div>
+              <div class="kanban-card" data-contact="3">
+                <div class="kc-name">Pierre Dubois</div>
+                <div class="kc-co">PME · Lyon</div>
+                <div class="kc-row"><span class="ia-score mid">68</span><span class="kc-time">Il y a 1h</span></div>
+                <div class="kc-subject">Question intégrations Salesforce</div>
+              </div>
+              <div class="kanban-card">
+                <div class="kc-name">Thomas Petit</div>
+                <div class="kc-co">E-commerce · Marseille</div>
+                <div class="kc-row"><span class="ia-score mid">61</span><span class="kc-time">Il y a 5h</span></div>
+                <div class="kc-subject">Automatisation logistique</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="kanban-col">
+            <div class="kanban-head"><span class="kanban-dot qualified"></span> Qualifié IA <span class="kanban-count">3</span></div>
+            <div class="kanban-cards">
+              <div class="kanban-card hot" data-contact="2">
+                <div class="kc-badge">Lead chaud</div>
+                <div class="kc-name">Marie Rousseau</div>
+                <div class="kc-co">SaaS B2B · Nantes</div>
+                <div class="kc-row"><span class="ia-score high">97</span><span class="kc-time">Il y a 28 min</span></div>
+                <div class="kc-subject">Plan Business</div>
+              </div>
+              <div class="kanban-card hot">
+                <div class="kc-badge">Lead chaud</div>
+                <div class="kc-name">Jean-Paul Moreau</div>
+                <div class="kc-co">Industrie · Toulouse</div>
+                <div class="kc-row"><span class="ia-score high">91</span><span class="kc-time">Hier</span></div>
+                <div class="kc-subject">Automatisation production</div>
+              </div>
+              <div class="kanban-card">
+                <div class="kc-name">Claire Dupont</div>
+                <div class="kc-co">Fintech · Paris</div>
+                <div class="kc-row"><span class="ia-score mid">74</span><span class="kc-time">Il y a 2j</span></div>
+                <div class="kc-subject">Conformité automatisée</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="kanban-col">
+            <div class="kanban-head"><span class="kanban-dot contacted"></span> Contacté <span class="kanban-count">2</span></div>
+            <div class="kanban-cards">
+              <div class="kanban-card">
+                <div class="kc-name">Alice Bernard</div>
+                <div class="kc-co">Conseil · Strasbourg</div>
+                <div class="kc-row"><span class="ia-score mid">55</span><span class="kc-time">Il y a 2j</span></div>
+                <div class="kc-action"><i data-lucide="mail"></i> Email envoyé</div>
+              </div>
+              <div class="kanban-card">
+                <div class="kc-name">Hugo Lefèvre</div>
+                <div class="kc-co">Santé · Lille</div>
+                <div class="kc-row"><span class="ia-score mid">62</span><span class="kc-time">Il y a 4j</span></div>
+                <div class="kc-action"><i data-lucide="phone"></i> Appel planifié</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="kanban-col">
+            <div class="kanban-head"><span class="kanban-dot converted"></span> Client <span class="kanban-count">2</span></div>
+            <div class="kanban-cards">
+              <div class="kanban-card success">
+                <div class="kc-badge success">Converti</div>
+                <div class="kc-name">Lucas Simon</div>
+                <div class="kc-co">Tech · Paris</div>
+                <div class="kc-row"><span class="ia-score high">88</span><span class="kc-plan">Business</span></div>
+              </div>
+              <div class="kanban-card success">
+                <div class="kc-badge success">Converti</div>
+                <div class="kc-name">Emma Blanc</div>
+                <div class="kc-co">EdTech · Nice</div>
+                <div class="kc-row"><span class="ia-score high">82</span><span class="kc-plan">Starter</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== CONFIG ===== -->
+      <div class="crm-panel" id="crm-config">
+        <div class="config-grid">
+          <!-- Email source -->
+          <div class="config-card">
+            <div class="config-head">
+              <i data-lucide="mail"></i>
+              <div>
+                <div class="config-title">Source email</div>
+                <div class="config-sub">Connectez la boîte mail à surveiller</div>
+              </div>
+            </div>
+            <div class="config-body">
+              <div class="config-field">
+                <label>Fournisseur</label>
+                <select>
+                  <option>Gmail (Google Workspace)</option>
+                  <option>Outlook (Microsoft 365)</option>
+                  <option>IMAP personnalisé</option>
+                </select>
+              </div>
+              <div class="config-field">
+                <label>Adresse email</label>
+                <input type="email" value="contact@autoflow.fr" placeholder="email@entreprise.fr">
+              </div>
+              <div class="config-status connected"><i data-lucide="check-circle"></i> Connecté</div>
+            </div>
+          </div>
+
+          <!-- IA Rules -->
+          <div class="config-card">
+            <div class="config-head">
+              <i data-lucide="brain"></i>
+              <div>
+                <div class="config-title">Règles de qualification IA</div>
+                <div class="config-sub">Personnalisez le scoring des leads</div>
+              </div>
+            </div>
+            <div class="config-body">
+              <div class="config-field">
+                <label>Seuil lead chaud</label>
+                <div class="range-row">
+                  <input type="range" min="50" max="100" value="80" class="config-range">
+                  <span class="range-val">80</span>
+                </div>
+              </div>
+              <div class="config-field">
+                <label>Seuil lead tiède</label>
+                <div class="range-row">
+                  <input type="range" min="20" max="80" value="50" class="config-range">
+                  <span class="range-val">50</span>
+                </div>
+              </div>
+              <div class="config-field">
+                <label>Mots-clés prioritaires</label>
+                <div class="tag-list">
+                  <span class="tag">démo<button>&times;</button></span>
+                  <span class="tag">tarifs<button>&times;</button></span>
+                  <span class="tag">automatisation<button>&times;</button></span>
+                  <span class="tag">intégration<button>&times;</button></span>
+                  <input type="text" placeholder="Ajouter…" class="tag-input">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notifications -->
+          <div class="config-card">
+            <div class="config-head">
+              <i data-lucide="bell"></i>
+              <div>
+                <div class="config-title">Notifications</div>
+                <div class="config-sub">Canaux d'alerte pour les leads chauds</div>
+              </div>
+            </div>
+            <div class="config-body">
+              <div class="config-toggle-row">
+                <div class="config-toggle-info">
+                  <i data-lucide="message-square"></i>
+                  <span>Slack</span>
+                </div>
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+              </div>
+              <div class="config-toggle-row">
+                <div class="config-toggle-info">
+                  <i data-lucide="mail"></i>
+                  <span>Email</span>
+                </div>
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+              </div>
+              <div class="config-toggle-row">
+                <div class="config-toggle-info">
+                  <i data-lucide="smartphone"></i>
+                  <span>SMS</span>
+                </div>
+                <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+              </div>
+              <div class="config-toggle-row">
+                <div class="config-toggle-info">
+                  <i data-lucide="monitor"></i>
+                  <span>Microsoft Teams</span>
+                </div>
+                <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+              </div>
+            </div>
+          </div>
+
+          <!-- CRM destination -->
+          <div class="config-card">
+            <div class="config-head">
+              <i data-lucide="database"></i>
+              <div>
+                <div class="config-title">CRM de destination</div>
+                <div class="config-sub">Où envoyer les leads qualifiés</div>
+              </div>
+            </div>
+            <div class="config-body">
+              <div class="config-field">
+                <label>CRM</label>
+                <select>
+                  <option>AutoFlow CRM (intégré)</option>
+                  <option>HubSpot</option>
+                  <option>Salesforce</option>
+                  <option>Pipedrive</option>
+                </select>
+              </div>
+              <div class="config-field">
+                <label>Action sur lead chaud</label>
+                <select>
+                  <option>Créer ticket + notifier équipe</option>
+                  <option>Créer ticket uniquement</option>
+                  <option>Notifier uniquement</option>
+                </select>
+              </div>
+              <div class="config-field">
+                <label>Action sur lead froid</label>
+                <select>
+                  <option>Archiver + rapport hebdo</option>
+                  <option>Ignorer</option>
+                  <option>Placer en file d'attente</option>
+                </select>
+              </div>
+              <button class="config-save"><i data-lucide="save"></i> Sauvegarder</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTACT DETAIL (slide-in) -->
+      <div class="contact-panel" id="contact-panel">
+        <div class="cp-head">
+          <button class="cp-close" id="cp-close"><i data-lucide="x"></i></button>
+          <div class="cp-avatar">SM</div>
+          <div class="cp-name">Sophie Martin</div>
+          <div class="cp-company">Startup Tech · Paris</div>
+          <div class="cp-score"><span class="ia-score high">Score 92</span></div>
+        </div>
+        <div class="cp-section">
+          <div class="cp-label">Contact</div>
+          <div class="cp-row"><i data-lucide="mail"></i> sophie.martin@startup.fr</div>
+          <div class="cp-row"><i data-lucide="phone"></i> +33 6 12 34 56 78</div>
+          <div class="cp-row"><i data-lucide="building-2"></i> Startup Tech SAS</div>
+          <div class="cp-row"><i data-lucide="map-pin"></i> Paris, France</div>
+        </div>
+        <div class="cp-section">
+          <div class="cp-label">Historique IA</div>
+          <div class="cp-timeline">
+            <div class="cp-event"><div class="cp-ev-dot green"></div><div class="cp-ev-body"><strong>Email reçu</strong> · Demande de démo<br><span>Il y a 12 min</span></div></div>
+            <div class="cp-event"><div class="cp-ev-dot blue"></div><div class="cp-ev-body"><strong>IA : Lead qualifié</strong> · Score 92<br><span>Il y a 11 min</span></div></div>
+            <div class="cp-event"><div class="cp-ev-dot blue"></div><div class="cp-ev-body"><strong>Ticket CRM créé</strong> · #1285<br><span>Il y a 11 min</span></div></div>
+            <div class="cp-event"><div class="cp-ev-dot green"></div><div class="cp-ev-body"><strong>Slack notifié</strong> · #leads-chauds<br><span>Il y a 10 min</span></div></div>
+          </div>
+        </div>
+        <div class="cp-actions">
+          <button class="cp-btn primary"><i data-lucide="send"></i> Répondre</button>
+          <button class="cp-btn"><i data-lucide="calendar"></i> Planifier</button>
+          <button class="cp-btn"><i data-lucide="archive"></i> Archiver</button>
+        </div>
+      </div>
+
+    </div>
+    <div class="page" id="page-emails"><div class="ph"><i data-lucide="mail" class="ph-ic"></i><h2>Emails</h2><p>Campagnes email, templates et séquences automatisées.</p><span class="ph-tag">Backend à venir</span></div></div>
+    <div class="page" id="page-scheduler"><div class="ph"><i data-lucide="calendar" class="ph-ic"></i><h2>Planificateur</h2><p>Planifiez vos automatisations sur des créneaux précis.</p><span class="ph-tag">Backend à venir</span></div></div>
+    <div class="page" id="page-clients"><div class="ph"><i data-lucide="building-2" class="ph-ic"></i><h2>Clients</h2><p>Gérez vos clients, contrats et accès.</p><span class="ph-tag">Backend à venir</span></div></div>
+    <div class="page" id="page-settings"><div class="ph"><i data-lucide="settings" class="ph-ic"></i><h2>Paramètres</h2><p>Configuration du compte, API, sécurité et notifications.</p><span class="ph-tag">Backend à venir</span></div></div>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
