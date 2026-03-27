@@ -148,7 +148,7 @@ function initAI() {
 // ===========================
 // API LAYER
 // ===========================
-const API = 'http://localhost:3000/api';
+const API = `${window.location.origin}/api`;
 const COMPANY_ID = 1;
 
 async function api(path, opts = {}) {
@@ -412,6 +412,23 @@ async function openContactByEmail(email) {
 async function loadConfig() {
   const company = await api(`/companies/${COMPANY_ID}`);
   const config = company.config || {};
+
+  // Gmail connection status
+  try {
+    const gmail = await api(`/companies/${COMPANY_ID}/gmail-status`);
+    const statusEl = document.getElementById('gmail-status');
+    if (statusEl) {
+      if (gmail.connected) {
+        statusEl.innerHTML = `<span style="color:#34c759">● Connecté</span> — ${gmail.email} <button id="gmail-disconnect" style="margin-left:8px;background:none;border:1px solid #d1d1d6;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:12px;color:#86868b">Déconnecter</button>`;
+        document.getElementById('gmail-disconnect')?.addEventListener('click', async () => {
+          await api(`/companies/${COMPANY_ID}/gmail-disconnect`, { method: 'POST' });
+          loadConfig();
+        });
+      } else {
+        statusEl.innerHTML = `<span style="color:#ff9500">● Non connecté</span> <a href="/auth/gmail?company=${COMPANY_ID}" style="margin-left:8px;display:inline-block;background:#0071e3;color:white;border-radius:8px;padding:6px 16px;text-decoration:none;font-size:13px;font-weight:500">Connecter Gmail</a>`;
+      }
+    }
+  } catch (e) { console.log('Gmail status check failed:', e); }
 
   // Email provider select
   const providerSelect = document.querySelector('.config-card:nth-child(1) select');

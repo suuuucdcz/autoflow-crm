@@ -16,7 +16,9 @@ db.exec(`
     name TEXT NOT NULL,
     email TEXT,
     -- Config stored as JSON for flexibility per client
-    config TEXT NOT NULL DEFAULT '{}'
+    config TEXT NOT NULL DEFAULT '{}',
+    -- Gmail OAuth tokens stored per company
+    gmail_tokens TEXT
   );
 
   CREATE TABLE IF NOT EXISTS emails (
