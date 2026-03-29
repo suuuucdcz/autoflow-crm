@@ -1,11 +1,11 @@
 const express = require('express');
 const db = require('../db/database');
-const { insertCalendarEvent } = require('../services/calendar');
+const { insertCalendarEvent, checkConflicts } = require('../services/calendar');
 
 const router = express.Router({ mergeParams: true });
 
 // GET /api/companies/:id/scheduler - List all meetings
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   const companyId = req.params.id;
   try {
     const meetings = db.prepare(`
@@ -16,9 +16,20 @@ router.get('/', (req, res) => {
       ORDER BY m.start_time ASC
     `).all(companyId);
     
+    const suggested = meetings.filter(m => m.status === 'suggested');
+    
+    // Check conflicts for each suggested meeting
+    for (const m of suggested) {
+      if (m.start_time && m.end_time) {
+        m.has_conflict = await checkConflicts(companyId, m.start_time, m.end_time);
+      } else {
+        m.has_conflict = false;
+      }
+    }
+
     // Group into suggested vs confirmed
     const response = {
-      suggested: meetings.filter(m => m.status === 'suggested'),
+      suggested,
       confirmed: meetings.filter(m => m.status === 'confirmed'),
     };
     

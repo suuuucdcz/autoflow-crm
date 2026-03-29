@@ -627,6 +627,7 @@ async function loadScheduler() {
     } else {
       suggestList.innerHTML = suggested.map(m => `
         <div style="border: 1px solid #e5e5ea; border-radius: 12px; padding: 16px; background: #fafafa;">
+          ${m.has_conflict ? `<div style="color: #ff3b30; font-size: 13px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 4px;"><i data-lucide="alert-triangle" style="width: 14px; height: 14px;"></i> Ce créneau chevauche un rendez-vous existant</div>` : ''}
           <div style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">${m.title || 'Rendez-vous'}</div>
           <div style="font-size: 13px; color: #86868b; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
             <i data-lucide="clock" style="width: 14px; height: 14px;"></i> ${new Date(m.start_time).toLocaleString('fr-FR', { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}
@@ -635,7 +636,7 @@ async function loadScheduler() {
             Avec <strong>${m.lead_name || 'Prospect'}</strong> (${m.lead_email || 'Email non fourni'})
           </div>
           <div style="display: flex; gap: 8px;">
-            <button onclick="confirmMeeting(${m.id})" style="flex: 1; padding: 8px; background: #34c759; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;"><i data-lucide="check" style="width: 16px; height: 16px;"></i> Valider</button>
+            <button onclick="confirmMeeting(${m.id}, ${m.has_conflict})" style="flex: 1; padding: 8px; background: #34c759; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;"><i data-lucide="check" style="width: 16px; height: 16px;"></i> Valider</button>
             <button onclick="rejectMeeting(${m.id})" style="padding: 8px 12px; background: white; border: 1px solid #d1d1d6; color: #ff3b30; border-radius: 6px; font-weight: 500; cursor: pointer;"><i data-lucide="x" style="width: 16px; height: 16px;"></i></button>
           </div>
         </div>
@@ -665,7 +666,11 @@ async function loadScheduler() {
   }
 }
 
-window.confirmMeeting = async function(id) {
+window.confirmMeeting = async function(id, hasConflict) {
+  if (hasConflict && !confirm("⚠️ Ce créneau est déjà pris dans votre Agenda Google. Voulez-vous vraiment rajouter ce rendez-vous par dessus ?")) {
+    return;
+  }
+
   try {
     const res = await api(`/companies/${COMPANY_ID}/scheduler/${id}/confirm`, { method: 'POST' });
     if (res.error) {

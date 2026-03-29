@@ -67,6 +67,43 @@ async function insertCalendarEvent(companyId, eventDetails) {
   }
 }
 
+/**
+ * Check if the user is busy during the given time period
+ * @param {Number} companyId
+ * @param {String} startTime ISO string
+ * @param {String} endTime ISO string
+ * @returns {Boolean} true if there is a conflict
+ */
+async function checkConflicts(companyId, startTime, endTime) {
+  const company = db.prepare('SELECT gmail_tokens FROM companies WHERE id = ?').get(companyId);
+  if (!company || !company.gmail_tokens) return false;
+
+  const tokens = JSON.parse(company.gmail_tokens);
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET
+  );
+  oauth2Client.setCredentials(tokens);
+
+  try {
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+    const response = await calendar.freebusy.query({
+      requestBody: {
+        timeMin: startTime,
+        timeMax: endTime,
+        items: [{ id: 'primary' }]
+      }
+    });
+
+    const busy = response.data.calendars['primary'].busy;
+    return busy && busy.length > 0;
+  } catch (err) {
+    console.error('Erreur FreeBusy Google Calendar:', err.message);
+    return false; // Safely default to false if API fails
+  }
+}
+
 module.exports = {
-  insertCalendarEvent
+  insertCalendarEvent,
+  checkConflicts
 };
