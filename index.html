@@ -9,7 +9,34 @@
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
 <body>
+  <!-- AUTHENTICATION SCREEN -->
+  <div id="auth-screen" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #f3f4f6; justify-content: center; align-items: center; z-index: 99999;">
+    <div style="background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; max-width: 400px; width: 90%;">
+      <div style="font-size: 24px; font-weight: 700; color: #111827; margin-bottom: 24px;">Auto<span style="color: #6366f1;">Flow</span></div>
+      
+      <div id="auth-login-form">
+        <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Connexion au Dashboard</h2>
+        <input type="email" id="login-email" placeholder="Adresse e-mail" style="width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #d1d1d6; border-radius: 8px; font-size: 14px; text-align: left; box-sizing: border-box;">
+        <input type="password" id="login-pwd" placeholder="Mot de passe" style="width: 100%; padding: 12px; margin-bottom: 16px; border: 1px solid #d1d1d6; border-radius: 8px; font-size: 14px; text-align: left; box-sizing: border-box;">
+        <button id="btn-login" style="width: 100%; padding: 12px; background: #6366f1; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;">Se connecter</button>
+        <p style="margin-top: 16px; font-size: 14px; color: #6b7280;">Pas encore de compte ? <a href="#" id="link-to-register" style="color: #6366f1; text-decoration: none; font-weight: 500;">Créer un compte</a></p>
+      </div>
 
+      <div id="auth-register-form" style="display: none;">
+        <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Créer votre espace</h2>
+        <input type="text" id="reg-name" placeholder="Nom de votre entreprise" style="width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #d1d1d6; border-radius: 8px; font-size: 14px; text-align: left; box-sizing: border-box;">
+        <input type="email" id="reg-email" placeholder="Adresse e-mail" style="width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #d1d1d6; border-radius: 8px; font-size: 14px; text-align: left; box-sizing: border-box;">
+        <input type="password" id="reg-pwd" placeholder="Choisissez un mot de passe" style="width: 100%; padding: 12px; margin-bottom: 16px; border: 1px solid #d1d1d6; border-radius: 8px; font-size: 14px; text-align: left; box-sizing: border-box;">
+        <button id="btn-register" style="width: 100%; padding: 12px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;">Commencer</button>
+        <p style="margin-top: 16px; font-size: 14px; color: #6b7280;">Déjà un compte ? <a href="#" id="link-to-login" style="color: #6366f1; text-decoration: none; font-weight: 500;">Se connecter</a></p>
+      </div>
+      
+      <div id="auth-error" style="color: #ef4444; font-size: 13px; margin-top: 12px; display: none;">Erreur d'authentification</div>
+    </div>
+  </div>
+
+  <!-- MAIN APP CONTAINER -->
+  <div id="app-container" style="display: none; height: 100vh;">
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sb-head">
@@ -60,10 +87,10 @@
     <div class="sb-footer">
       <div class="sb-avatar">A</div>
       <div class="sb-user-info">
-        <div class="sb-user-name">Admin</div>
+        <div class="sb-user-name" id="user-display-name">Admin</div>
         <div class="sb-user-role">Business</div>
       </div>
-      <button class="sb-more" title="Options"><i data-lucide="more-horizontal"></i></button>
+      <button class="sb-more" id="btn-logout" title="Déconnexion"><i data-lucide="log-out"></i></button>
     </div>
   </aside>
 
@@ -827,5 +854,6 @@
   </main>
 
   <script src="script.js"></script>
+  </div> <!-- END APP CONTAINER -->
 </body>
 </html>

@@ -10,6 +10,7 @@ const fs = require('fs');
 const { google } = require('googleapis');
 
 // Import routes
+const authRoutes = require('./routes/auth');
 const companiesRoutes = require('./routes/companies');
 const emailsRoutes = require('./routes/emails');
 const leadsRoutes = require('./routes/leads');
@@ -32,7 +33,38 @@ app.use(express.json());
 // Serve dashboard frontend
 app.use(express.static(path.join(__dirname, '..')));
 
-// API Routes
+// Authentication Router
+app.use('/api/auth', authRoutes);
+
+// Auth Middleware for protected endpoints
+function authenticateUser(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Accès refusé. Veuillez vous connecter.' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  const company = db.prepare('SELECT id FROM companies WHERE auth_token = ?').get(token);
+
+  if (!company) {
+    return res.status(401).json({ error: 'Session invalide ou expirée.' });
+  }
+
+  // The route is usually /api/companies/:id/...
+  if (req.params.id && parseInt(req.params.id) !== company.id) {
+    return res.status(403).json({ error: 'Accès interdit aux données de cette entreprise.' });
+  }
+
+  req.companyId = company.id;
+  next();
+}
+
+// Ensure the middleware captures requests to /api/companies/:id
+// Since we used app.use('/api/companies', ...), the child router has its own req.params parsing.
+// We can apply the middleware directly to the app.use
+app.use('/api/companies/:id', authenticateUser);
+
+// Protected API Routes
 app.use('/api/companies', companiesRoutes);
 app.use('/api/companies', emailsRoutes);
 app.use('/api/companies', leadsRoutes);
@@ -99,18 +131,13 @@ app.get('/auth/gmail/callback', async (req, res) => {
     db.prepare('UPDATE companies SET gmail_tokens = ?, email = ? WHERE id = ?')
       .run(tokenData, email, companyId);
 
-    // Also save to file for the watcher (backward compat)
-    fs.writeFileSync(path.join(__dirname, 'gmail_tokens.json'), tokenData);
+    // Démarrer dynamiquement le watcher pour cette entreprise !
+    const { startGmailWatcher } = require('./services/gmailWatcher');
+    startGmailWatcher(parseInt(companyId)).catch(err => console.error(err));
 
     // Log activity
     db.prepare('INSERT INTO activity_log (company_id, action, detail) VALUES (?, ?, ?)')
       .run(companyId, 'gmail_connected', `Gmail connecté : ${email}`);
-
-    // Start watcher for this company
-    try {
-      const { startGmailWatcher } = require('./services/gmailWatcher');
-      startGmailWatcher(parseInt(companyId));
-    } catch (e) { console.error('Watcher start error:', e.message); }
 
     // Redirect back to dashboard
     res.send(`
@@ -164,9 +191,10 @@ app.get('/api/companies/:id/gmail-status', async (req, res) => {
 // Disconnect Gmail
 app.post('/api/companies/:id/gmail-disconnect', (req, res) => {
   db.prepare('UPDATE companies SET gmail_tokens = NULL WHERE id = ?').run(req.params.id);
-  // Remove local tokens file
-  const tokensPath = path.join(__dirname, 'gmail_tokens.json');
-  if (fs.existsSync(tokensPath)) fs.unlinkSync(tokensPath);
+  
+  const { stopGmailWatcher } = require('./services/gmailWatcher');
+  stopGmailWatcher(parseInt(req.params.id));
+  
   res.json({ success: true });
 });
 
@@ -258,11 +286,13 @@ app.post('/api/admin/cleanup-demo', (req, res) => {
   res.json({ success: true, deleted: { emails: deletedEmails, leads: deletedLeads }, remaining });
 });
 
-// Ensure default company exists
+// Ensure default company exists (legacy compatibility)
 const defaultCompany = db.prepare('SELECT id FROM companies WHERE id = 1').get();
 if (!defaultCompany) {
+  // Use a generated dummy password so it requires them to setup later if they register, 
+  // or they can login and it will set their first password.
   db.prepare("INSERT INTO companies (name, email, config) VALUES (?, ?, ?)").run(
-    'Mon entreprise', '', JSON.stringify({
+    'Mon entreprise', 'admin@autoflow.com', JSON.stringify({
       email_provider: 'gmail', hot_threshold: 80, warm_threshold: 50,
       keywords: ['démo', 'tarifs', 'automatisation', 'intégration'],
       notifications: { slack: false, email: false, sms: false, teams: false },
@@ -280,24 +310,16 @@ app.listen(PORT, async () => {
   ╚══════════════════════════════════════════╝
   `);
 
-  // Auto-start Gmail watcher if tokens exist
-  const gmailTokens = path.join(__dirname, 'gmail_tokens.json');
-  if (fs.existsSync(gmailTokens)) {
-    console.log('  📧 Gmail watcher démarré');
+  // Auto-start Gmail watcher for all connected companies
+  const connectedCompanies = db.prepare("SELECT id FROM companies WHERE gmail_tokens IS NOT NULL AND gmail_tokens != ''").all();
+  if (connectedCompanies && connectedCompanies.length > 0) {
     const { startGmailWatcher } = require('./services/gmailWatcher');
-    await startGmailWatcher(1);
-  } else {
-    // Check DB for tokens
-    const company = db.prepare('SELECT gmail_tokens FROM companies WHERE id = 1').get();
-    if (company && company.gmail_tokens) {
-      // Restore file from DB
-      fs.writeFileSync(gmailTokens, company.gmail_tokens);
-      console.log('  📧 Gmail watcher démarré (tokens restaurés)');
-      const { startGmailWatcher } = require('./services/gmailWatcher');
-      await startGmailWatcher(1);
-    } else {
-      console.log('  ⚠️  Gmail non connecté');
-      console.log(`  👉 Ouvre: ${BASE_URL}/auth/gmail`);
+    for (const company of connectedCompanies) {
+      console.log(`  📧 Gmail watcher démarré pour l'entreprise ID: ${company.id}`);
+      // Asynchronously start watchers
+      startGmailWatcher(company.id).catch(e => console.error(`Erreur watcher (ID: ${company.id}):`, e.message));
     }
+  } else {
+    console.log('  ⚠️  Aucun Gmail connecté');
   }
 });

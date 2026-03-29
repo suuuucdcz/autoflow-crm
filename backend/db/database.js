@@ -74,8 +74,14 @@ db.exec(`
 // Simple migration for existing DBs
 try {
   db.exec('ALTER TABLE emails ADD COLUMN thread_id TEXT');
-} catch(e) {
-  // Column exists
-}
+} catch(e) {}
+
+try {
+  db.exec('ALTER TABLE companies ADD COLUMN password_hash TEXT');
+} catch(e) {}
+
+try {
+  db.exec('ALTER TABLE companies ADD COLUMN auth_token TEXT');
+} catch(e) {}
 
 module.exports = db;

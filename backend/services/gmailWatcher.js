@@ -11,37 +11,35 @@ const path = require('path');
 const db = require('../db/database');
 const { scoreEmail } = require('./scorer');
 const { notifyHotLead } = require('./notifier');
-const { getOAuth2Client, TOKENS_PATH } = require('./authGmail');
-
-let pollInterval = null;
-const POLL_DELAY = 30000; // 30 seconds
-let lastCheckTime = null;
+const activeWatchers = new Map();
+const POLL_DELAY = 15000; // 15 seconds
 
 /**
- * Get an authenticated Gmail client
+ * Get an authenticated Gmail client for a specific company
  */
-function getGmailClient() {
-  if (!fs.existsSync(TOKENS_PATH)) {
-    console.log('⚠️ Pas de tokens Gmail — lance: npm run auth:gmail');
+function getGmailClient(companyId) {
+  const company = db.prepare('SELECT gmail_tokens FROM companies WHERE id = ?').get(companyId);
+  if (!company || !company.gmail_tokens) {
     return null;
   }
 
-  const tokens = JSON.parse(fs.readFileSync(TOKENS_PATH, 'utf-8'));
-  const oauth2Client = getOAuth2Client();
+  const tokens = JSON.parse(company.gmail_tokens);
+  // Bypass require('./authGmail') as it expects local flow
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET
+  );
   oauth2Client.setCredentials(tokens);
 
   // Auto-refresh tokens on expiry
   oauth2Client.on('tokens', (newTokens) => {
-    const saved = JSON.parse(fs.readFileSync(TOKENS_PATH, 'utf-8'));
-    if (newTokens.refresh_token) saved.refresh_token = newTokens.refresh_token;
-    saved.access_token = newTokens.access_token;
-    saved.expiry_date = newTokens.expiry_date;
-    const tokenStr = JSON.stringify(saved, null, 2);
-    fs.writeFileSync(TOKENS_PATH, tokenStr);
+    if (newTokens.refresh_token) tokens.refresh_token = newTokens.refresh_token;
+    tokens.access_token = newTokens.access_token;
+    tokens.expiry_date = newTokens.expiry_date;
+    const tokenStr = JSON.stringify(tokens, null, 2);
     
-    // Auto-update db so Railway persists new credentials across container restarts!
     try {
-      db.prepare('UPDATE companies SET gmail_tokens = ? WHERE id = 1').run(tokenStr);
+      db.prepare('UPDATE companies SET gmail_tokens = ? WHERE id = ?').run(tokenStr, companyId);
     } catch(e) {}
   });
 
@@ -211,20 +209,50 @@ async function processGmailMessage(gmail, message, companyId, config) {
  */
 async function startGmailWatcher(companyId) {
   const company = db.prepare('SELECT * FROM companies WHERE id = ?').get(companyId);
-  if (!company) { console.error('Company not found'); return; }
+  if (!company) { console.error(`Company ${companyId} not found`); return; }
   const config = JSON.parse(company.config);
 
-  console.log('📧 Démarrage du watcher Gmail (Google API)...');
+  // Prevent multiple watchers for the same company
+  if (activeWatchers.has(companyId)) {
+    clearInterval(activeWatchers.get(companyId).interval);
+  }
+
+  console.log(`📧 Démarrage du watcher Gmail (Entreprise ${companyId})...`);
+
+  // To track lastCheckTime per company
+  let lastCheckTime = activeWatchers.has(companyId) ? activeWatchers.get(companyId).lastCheckTime : null;
 
   const poll = async () => {
     try {
-      const gmail = getGmailClient();
+      const gmail = getGmailClient(companyId);
       if (!gmail) return;
 
-      const messages = await fetchNewEmails(gmail);
+      // Build query: recent emails in inbox, optionally after a timestamp
+      let query = 'in:inbox';
+      if (lastCheckTime) {
+        query += ` after:${Math.floor(lastCheckTime / 1000)}`;
+      }
+
+      const res = await gmail.users.messages.list({
+        userId: 'me',
+        q: query,
+        maxResults: 20,
+      });
+
+      const messages = res.data.messages || [];
       if (messages.length > 0) {
-        console.log(`\n📬 ${messages.length} nouveau(x) email(s) détecté(s) :`);
-        const chronological = messages.slice().reverse();
+        const fullMessages = [];
+        for (const msg of messages) {
+          const full = await gmail.users.messages.get({
+            userId: 'me',
+            id: msg.id,
+            format: 'full',
+          });
+          fullMessages.push(full.data);
+        }
+
+        console.log(`\n📬 ${fullMessages.length} nouveau(x) email(s) détecté(s) (Entreprise ${companyId}):`);
+        const chronological = fullMessages.slice().reverse();
         let addedCount = 0;
         for (const msg of chronological) {
           const inserted = await processGmailMessage(gmail, msg, companyId, config);
@@ -239,27 +267,34 @@ async function startGmailWatcher(companyId) {
       }
 
       lastCheckTime = Date.now();
+      activeWatchers.get(companyId).lastCheckTime = lastCheckTime;
     } catch (err) {
       if (err.message?.includes('invalid_grant') || err.message?.includes('Token')) {
-        console.error('⚠️ Token expiré — relance: npm run auth:gmail');
+        console.error(`⚠️ Token expiré pour Entreprise ${companyId}`);
+        stopGmailWatcher(companyId); // Stop polling if token is hopelessly invalid
       } else {
-        console.error('Watcher error:', err.message);
+        console.error(`Watcher error (Entreprise ${companyId}):`, err.message);
       }
     }
   };
 
+  // Save the state
+  activeWatchers.set(companyId, {
+    lastCheckTime: lastCheckTime,
+    interval: setInterval(poll, POLL_DELAY)
+  });
+
   // Initial poll
   await poll();
-
-  // Then poll every 30 seconds
-  pollInterval = setInterval(poll, POLL_DELAY);
-  console.log(`✅ Watcher Gmail actif — vérification toutes les ${POLL_DELAY / 1000}s\n`);
+  
+  console.log(`✅ Watcher Gmail actif pour Entreprise ${companyId} — vérification toutes les ${POLL_DELAY / 1000}s\n`);
 }
 
-function stopGmailWatcher() {
-  if (pollInterval) {
-    clearInterval(pollInterval);
-    pollInterval = null;
+function stopGmailWatcher(companyId) {
+  if (activeWatchers.has(companyId)) {
+    clearInterval(activeWatchers.get(companyId).interval);
+    activeWatchers.delete(companyId);
+    console.log(`🛑 Watcher Gmail arrêté pour Entreprise ${companyId}`);
   }
 }
 

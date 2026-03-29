@@ -149,15 +149,143 @@ function initAI() {
 // API LAYER
 // ===========================
 const API = `${window.location.origin}/api`;
-const COMPANY_ID = 1;
+let COMPANY_ID = localStorage.getItem('company_id');
 
 async function api(path, opts = {}) {
+  const token = localStorage.getItem('auth_token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
   const res = await fetch(`${API}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     ...opts,
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
+  
+  if (res.status === 401) {
+    // Session expired or invalid
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('company_id');
+    window.location.reload();
+  }
+  
   return res.json();
+}
+
+// ===========================
+// AUTHENTICATION LOGIC
+// ===========================
+async function initAuth() {
+  const authScreen = document.getElementById('auth-screen');
+  const appContainer = document.getElementById('app-container');
+  const loginForm = document.getElementById('auth-login-form');
+  const registerForm = document.getElementById('auth-register-form');
+  const errDiv = document.getElementById('auth-error');
+  
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    // Verify token
+    try {
+      const res = await api('/auth/me');
+      if (res.success) {
+        COMPANY_ID = res.company_id;
+        document.getElementById('user-display-name').textContent = res.name || 'Admin';
+        authScreen.style.display = 'none';
+        appContainer.style.display = 'block';
+        init(); // Start CRM dashboard
+        return;
+      }
+    } catch(e) {}
+  }
+
+  // Not logged in or invalid token
+  authScreen.style.display = 'flex';
+  appContainer.style.display = 'none';
+
+  document.getElementById('link-to-register').addEventListener('click', (e) => {
+    e.preventDefault();
+    loginForm.style.display = 'none';
+    registerForm.style.display = 'block';
+    errDiv.style.display = 'none';
+  });
+
+  document.getElementById('link-to-login').addEventListener('click', (e) => {
+    e.preventDefault();
+    registerForm.style.display = 'none';
+    loginForm.style.display = 'block';
+    errDiv.style.display = 'none';
+  });
+
+  document.getElementById('btn-login').addEventListener('click', async () => {
+    const email = document.getElementById('login-email').value;
+    const pwd = document.getElementById('login-pwd').value;
+    errDiv.style.display = 'none';
+    
+    if (!email || !pwd) {
+      errDiv.textContent = "Veuillez remplir les champs.";
+      errDiv.style.display = 'block';
+      return;
+    }
+
+    document.getElementById('btn-login').textContent = 'Connexion...';
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pwd })
+      });
+      const data = await res.json();
+      
+      if (res.ok && data.success) {
+        localStorage.setItem('auth_token', data.token);
+        localStorage.setItem('company_id', data.company_id);
+        window.location.reload();
+      } else {
+        errDiv.textContent = data.error || "Erreur de connexion";
+        errDiv.style.display = 'block';
+      }
+    } catch(e) {
+      errDiv.textContent = "Erreur réseau";
+      errDiv.style.display = 'block';
+    }
+    document.getElementById('btn-login').textContent = 'Se connecter';
+  });
+
+  document.getElementById('btn-register').addEventListener('click', async () => {
+    const name = document.getElementById('reg-name').value;
+    const email = document.getElementById('reg-email').value;
+    const pwd = document.getElementById('reg-pwd').value;
+    errDiv.style.display = 'none';
+    
+    if (!name || !email || !pwd) {
+      errDiv.textContent = "Veuillez remplir tous les champs.";
+      errDiv.style.display = 'block';
+      return;
+    }
+
+    document.getElementById('btn-register').textContent = 'Création...';
+    try {
+      const res = await fetch(`${API}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password: pwd })
+      });
+      const data = await res.json();
+      
+      if (res.ok && data.success) {
+        localStorage.setItem('auth_token', data.token);
+        localStorage.setItem('company_id', data.company_id);
+        window.location.reload();
+      } else {
+        errDiv.textContent = data.error || "Erreur d'inscription";
+        errDiv.style.display = 'block';
+      }
+    } catch(e) {
+      errDiv.textContent = "Erreur réseau";
+      errDiv.style.display = 'block';
+    }
+    document.getElementById('btn-register').textContent = 'Commencer';
+  });
 }
 
 function initials(name) {
@@ -479,6 +607,13 @@ async function openContactPanel(lead) {
 // CONFIG (API-driven)
 // ===========================
 async function loadConfig() {
+  // Logout
+  document.getElementById('btn-logout').addEventListener('click', () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('company_id');
+    window.location.reload();
+  });
+
   const company = await api(`/companies/${COMPANY_ID}`);
   const config = company.config || {};
 
@@ -606,8 +741,13 @@ function addTagElement(tagList, tagInput, text) {
   else tagList.appendChild(tag);
 }
 
-// --- Init ---
+// --- Wait for DOM to load, then initialize auth check
 document.addEventListener('DOMContentLoaded', () => {
+  if (window.lucide) lucide.createIcons();
+  initAuth(); // We don't call init() directly anymore, initAuth() will call it after successful auth
+});
+
+function init() {
   initNav();
   initSidebar();
   initCounters();
@@ -722,4 +862,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Render Lucide icons
   if (window.lucide) lucide.createIcons();
-});
+}
