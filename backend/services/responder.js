@@ -13,17 +13,21 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
  * @returns {String} The drafted reply text
  */
 async function draftReply(email, config) {
-  const prompt = `Tu es "L'équipe AutoFlow", une agence experte en automatisation de processus métier (CRM, IA, Zapier, Make).
-Tu dois rédiger une réponse commerciale par e-mail parfaite à un prospect B2B qui a envoyé le message suivant.
+  const prompt = `Tu es "L'équipe AutoFlow", une agence experte en automatisation.
+Tu dois rédiger une réponse commerciale parfaite à ce prospect.
 
 CONSIGNES STRICTES :
-1. Vouvoiement OBLIGATOIRE. Sois professionnel, chaleureux et clair.
-2. Si le prospect demande un devis, une démo ou des tarifs, propose-lui un rendez-vous téléphonique ou visio la semaine prochaine.
-3. Ne fais QUE rédiger le corps de l'e-mail et la signature. 
-4. Signe l'e-mail par : "Cordialement,\\n\\nL'équipe AutoFlow"
-5. N'inclut PAS d'objet d'e-mail (le sujet), ne mets PAS de guillemets autour de l'e-mail, ne mets PAS de balises comme "Corps de l'e-mail :". Écris directement le texte.
-6. Ne simule pas d'adresse e-mail ou de numéro de téléphone fictif dans la signature.
-7. Reste concis (100 à 150 mots maximum). L'objectif est d'engager, pas de noyer le prospect.
+1. Vouvoiement OBLIGATOIRE. Sois professionnel et chaleureux.
+2. Si le prospect demande un devis ou démo, propose un rdv la semaine prochaine.
+3. Signe obligatoirement par : "Cordialement,\\n\\nL'équipe AutoFlow".
+4. Tu dois retourner la réponse SOUS FORME DE JSON STRICTEMENT VALIDE.
+5. Sois concis (max 150 mots).
+
+Format JSON attendu (aucune autre balise markdown) :
+{
+  "subject": "Re: <votre suggestion d'objet ou l'original>",
+  "body": "<corps de l'email avec les sauts de ligne \\n>"
+}
 
 E-mail reçu du prospect :
 ---
@@ -45,21 +49,32 @@ Cordialement,
 
 L'équipe AutoFlow
 
-Rédige maintenant la réponse pour ce prospect précis de manière directe :`;
+Rédige maintenant la réponse pour ce prospect précis de manière directe et formate-la en JSON STRICTEMENT VALIDE :`;
 
   try {
     const chat = await groq.chat.completions.create({
       messages: [{ role: 'user', content: prompt }],
       model: 'llama-3.3-70b-versatile',
-      temperature: 0.4, // Slight variation to sound natural
+      temperature: 0.3,
       max_tokens: 300,
+      response_format: { type: 'json_object' }
     });
 
-    let draft = chat.choices[0]?.message?.content || '';
-    return draft.trim();
+    let raw = chat.choices[0]?.message?.content || '{}';
+    // Clean markdown manually if it still injects it
+    raw = raw.replace(/^```[a-z]*\s*/i, '').replace(/\s*```$/i, '').trim();
+    const result = JSON.parse(raw);
+    
+    return {
+      subject: result.subject || `Re: ${email.subject}`,
+      body: result.body || result.texte || result.text || ''
+    };
   } catch (err) {
     console.error('Responder error:', err.message);
-    return `Bonjour ${email.from_name.split(' ')[0] || ''},\n\nMerci pour votre message. Nous l'avons bien reçu et reviendrons vers vous très rapidement pour vous apporter une réponse personnalisée.\n\nCordialement,\n\nL'équipe AutoFlow`;
+    return {
+      subject: `Re: ${email.subject || ''}`,
+      body: `Bonjour ${email.from_name.split(' ')[0] || ''},\n\nMerci pour votre message. Nous l'avons bien reçu et reviendrons vers vous très rapidement pour vous apporter une réponse personnalisée.\n\nCordialement,\n\nL'équipe AutoFlow`
+    };
   }
 }
 

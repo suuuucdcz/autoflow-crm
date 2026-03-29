@@ -637,6 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('cp-action-buttons').style.display = 'flex';
       document.getElementById('cp-reply-box').style.display = 'none';
       document.getElementById('ai-reply-text').value = '';
+      if(document.getElementById('ai-reply-subject')) document.getElementById('ai-reply-subject').value = '';
     });
   }
 
@@ -661,13 +662,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!activeContactEmailId) return alert('Erreur : Email source introuvable.');
       
       const txt = document.getElementById('ai-reply-text');
+      const subj = document.getElementById('ai-reply-subject');
       txt.value = "L'IA analyse le contexte et rédige la réponse...";
+      if(subj) subj.value = "Génération...";
       txt.style.opacity = '0.5';
       
       try {
         const res = await api(`/companies/${COMPANY_ID}/emails/${activeContactEmailId}/draft-reply`, { method: 'POST' });
         if (res.draft) {
-          txt.value = res.draft;
+          if(subj) subj.value = res.draft.subject || '';
+          txt.value = res.draft.body || '';
         } else {
           txt.value = 'Erreur lors de la rédaction.';
         }
@@ -683,18 +687,21 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!activeContactEmailId) return alert('Erreur : Email source introuvable.');
       
       const txt = document.getElementById('ai-reply-text').value;
+      const subj = document.getElementById('ai-reply-subject')?.value || '';
+      
       if (!txt) return alert('Veuillez écrire un message.');
       
       const origHtml = btnAiSend.innerHTML;
       btnAiSend.innerHTML = 'Envoi Gmail en cours...';
       try {
         await api(`/companies/${COMPANY_ID}/emails/${activeContactEmailId}/send-reply`, {
-          method: 'POST', body: JSON.stringify({ text: txt })
+          method: 'POST', body: JSON.stringify({ text: txt, subject: subj })
         });
         alert('✅ Réponse envoyée avec succès via Gmail !');
         document.getElementById('cp-action-buttons').style.display = 'flex';
         document.getElementById('cp-reply-box').style.display = 'none';
         document.getElementById('ai-reply-text').value = '';
+        if(document.getElementById('ai-reply-subject')) document.getElementById('ai-reply-subject').value = '';
         
         // Refresh contact panel if possible
         if (activeContactLeadId) {

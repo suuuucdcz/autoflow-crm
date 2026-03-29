@@ -49,7 +49,7 @@ router.post('/:id/emails/:emailId/draft-reply', async (req, res) => {
 
 // POST /api/companies/:id/emails/:emailId/send-reply — send real response via Gmail
 router.post('/:id/emails/:emailId/send-reply', async (req, res) => {
-  const { text } = req.body;
+  const { text, subject } = req.body;
   if (!text) return res.status(400).json({ error: 'Texte requis' });
 
   const row = db.prepare('SELECT * FROM emails WHERE id = ? AND company_id = ?').get(req.params.emailId, req.params.id);
@@ -57,15 +57,16 @@ router.post('/:id/emails/:emailId/send-reply', async (req, res) => {
 
   try {
     const { sendReply } = require('../services/sender');
-    // Using string matching to grab Message-ID is complex, we just pass threadId if present
-    const sent = await sendReply(req.params.id, row.from_email, row.subject, null, row.thread_id, text);
+    // Use the user's provided subject, fallback to the row's original subject
+    const finalSubject = subject && subject.trim().length > 0 ? subject : row.subject;
+    const sent = await sendReply(req.params.id, row.from_email, finalSubject, null, row.thread_id, text);
     
     // Log activity 
     // Find if there is a lead associated with this email
     const lead = db.prepare('SELECT id FROM leads WHERE source_email_id = ?').get(row.id);
     if (lead) {
       db.prepare('INSERT INTO activity_log (company_id, lead_id, action, detail) VALUES (?, ?, ?, ?)').run(
-        req.params.id, lead.id, 'reply_sent', `Réponse envoyée (via IA) à ${row.from_email}`
+        req.params.id, lead.id, 'reply_sent', `Réponse envoyée avec le sujet "${finalSubject}" à ${row.from_email}`
       );
       // Automatically advance stage to contacted
       db.prepare("UPDATE leads SET stage = 'contacted' WHERE id = ?").run(lead.id);
