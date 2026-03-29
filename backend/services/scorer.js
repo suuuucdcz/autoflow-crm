@@ -18,26 +18,22 @@ async function scoreEmail(email, config) {
   const prompt = `Tu es un assistant commercial expert en qualification de leads B2B.
 
 Analyse cet email et retourne un JSON avec exactement ces champs :
-- "score": un entier de 0 à 100 indiquant la probabilité que cette personne devienne client
-- "tag": "lead" si c'est une opportunité commerciale, "support" si c'est du support technique, "spam" si c'est du spam/newsletter
+- "score": un entier de 0 à 100 indiquant la probabilité que l'email nécessite une action (commerciale ou pro)
+- "tag": "lead" (pour les opportunités, envois de fichiers, devis, échanges humains), "support" (pour l'aide technique), ou "spam" (STRICTEMENT réservé aux pubs, newsletters, promotions, et robots)
 - "reason": une courte explication en français (max 20 mots)
 
-Critères de scoring élevé (80-100) :
-${keywords.length > 0 ? `- Mention de mots-clés prioritaires : ${keywords.join(', ')}` : ''}
-- Demande de démo, de tarifs, ou d'informations commerciales
-- Entreprise identifiable (nom de société dans la signature)
-- Ton professionnel, besoin exprimé clairement
+Règles de qualification :
+1. Score élevé (80-100) : Vrai prospect commercial, demande de devis, de tarifs, de démo. ${keywords.length > 0 ? `Présence des mots-clés de l'entreprise : ${keywords.join(', ')}.` : ''}
+2. Score moyen (30-79) : Échange professionnel "classique", humain, envoi de fichiers (design, maquette, contrat) sans demande explicite. L'email de votre ami contenant une vidéo "motion design" rentre ici ! Taggez-le "lead".
+3. Score très bas (0-20) et tag "spam" : UNIQUEMENT pour les newsletters automatiques (promos, offres, -50%), les bots (noreply), ou les démarcheurs à froid agressifs.
 
-Critères de scoring bas (0-30) :
-- Spam, newsletter, promotion
-- Pas de lien avec les services d'automatisation
-- Email générique sans contexte
+Attention critique : Un email provenant d'un vrai nom humain avec un sujet professionnel (ex: "Autoflow motion design") mais un corps vide N'EST PAS UN SPAM ! C'est souvent un collègue qui envoie une pièce jointe ou un lien. Ne le tagguez pas en "spam" !
 
 Email à analyser :
 ---
 De : ${email.from_name} <${email.from_email}>
 Objet : ${email.subject}
-Corps : ${email.body || email.snippet || ''}
+Corps : ${email.body || email.snippet || '(Message vide : présence très probable d\'une pièce jointe ou simple transfert)'}
 ---
 
 Réponds UNIQUEMENT en JSON valide, sans markdown, sans explication :`;
