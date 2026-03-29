@@ -646,7 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btnCpArchive.innerHTML = 'Archivage...';
       if (activeContactLeadId) {
         await api(`/companies/${COMPANY_ID}/leads/${activeContactLeadId}`, {
-          method: 'PUT', body: JSON.stringify({ stage: 'archived' })
+          method: 'PUT', body: { stage: 'archived' }
         });
       }
       document.getElementById('contact-panel').classList.remove('open');
@@ -694,18 +694,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const origHtml = btnAiSend.innerHTML;
       btnAiSend.innerHTML = 'Envoi Gmail en cours...';
       try {
-        await api(`/companies/${COMPANY_ID}/emails/${activeContactEmailId}/send-reply`, {
-          method: 'POST', body: JSON.stringify({ text: txt, subject: subj })
+        const sendResponse = await api(`/companies/${COMPANY_ID}/emails/${activeContactEmailId}/send-reply`, {
+          method: 'POST', body: { text: txt, subject: subj }
         });
-        alert('✅ Réponse envoyée avec succès via Gmail !');
-        document.getElementById('cp-action-buttons').style.display = 'flex';
-        document.getElementById('cp-reply-box').style.display = 'none';
-        document.getElementById('ai-reply-text').value = '';
-        if(document.getElementById('ai-reply-subject')) document.getElementById('ai-reply-subject').value = '';
         
-        // Refresh contact panel if possible
-        if (activeContactLeadId) {
-          openContactPanel({ id: activeContactLeadId }); 
+        if (sendResponse.error) {
+          alert('Erreur: ' + sendResponse.error);
+        } else {
+          alert('✅ Réponse envoyée avec succès via Gmail !');
+          document.getElementById('cp-action-buttons').style.display = 'flex';
+          document.getElementById('cp-reply-box').style.display = 'none';
+          document.getElementById('ai-reply-text').value = '';
+          if(document.getElementById('ai-reply-subject')) document.getElementById('ai-reply-subject').value = '';
+          
+          // Refresh contact panel if possible
+          if (activeContactLeadId) {
+            openContactPanel({ id: activeContactLeadId }); 
+          }
         }
       } catch (err) {
         alert('Erreur lors de l\'envoi : ' + err.message);
