@@ -190,6 +190,8 @@ function scoreClass(score) {
 // ===========================
 // CRM MODULE (API-driven)
 // ===========================
+let currentInboxDataStr = '';
+let currentPipelineDataStr = '';
 async function initCRM() {
   // Tab switching
   const tabs   = document.querySelectorAll('.crm-tab');
@@ -218,6 +220,44 @@ async function initCRM() {
     loadPipeline(),
     loadConfig(),
   ]);
+
+  // Start Background Polling for Real-Time Experience
+  setInterval(async () => {
+    const pageLeads = document.getElementById('page-leads');
+    if (!pageLeads || !pageLeads.classList.contains('active')) return;
+
+    // 1. Poll Inbox if active
+    const crmInbox = document.getElementById('crm-inbox');
+    if (crmInbox && crmInbox.classList.contains('active')) {
+      const activeFilter = document.querySelector('.inbox-filter.active');
+      let filterKey = 'all';
+      if (activeFilter) {
+        const text = activeFilter.textContent.toLowerCase();
+        if (text.includes('leads')) filterKey = 'lead';
+        else if (text.includes('support')) filterKey = 'support';
+        else if (text.includes('spam')) filterKey = 'spam';
+      }
+      
+      const url = filterKey !== 'all' ? `/companies/${COMPANY_ID}/emails?tag=${filterKey}` : `/companies/${COMPANY_ID}/emails`;
+      try {
+        const emails = await api(url);
+        if (JSON.stringify(emails) !== currentInboxDataStr) {
+          loadInbox(filterKey); // Data changed, re-render!
+        }
+      } catch (e) {}
+    }
+
+    // 2. Poll Pipeline if active
+    const crmPipeline = document.getElementById('crm-pipeline');
+    if (crmPipeline && crmPipeline.classList.contains('active')) {
+      try {
+        const leads = await api(`/companies/${COMPANY_ID}/leads`);
+        if (JSON.stringify(leads) !== currentPipelineDataStr) {
+          loadPipeline(); // Data changed, re-render!
+        }
+      } catch (e) {}
+    }
+  }, 10000); // 10 seconds interval
 }
 
 // ===========================
@@ -228,6 +268,7 @@ async function loadInbox(tagFilter) {
     ? `/companies/${COMPANY_ID}/emails?tag=${tagFilter}`
     : `/companies/${COMPANY_ID}/emails`;
   const emails = await api(url);
+  currentInboxDataStr = JSON.stringify(emails);
 
   const list = document.querySelector('.inbox-list');
   if (!list) return;
@@ -303,6 +344,7 @@ async function loadInbox(tagFilter) {
 // ===========================
 async function loadPipeline() {
   const leads = await api(`/companies/${COMPANY_ID}/leads`);
+  currentPipelineDataStr = JSON.stringify(leads);
   const stages = { new: [], qualified: [], contacted: [], converted: [] };
   leads.forEach(l => { if (stages[l.stage]) stages[l.stage].push(l); });
 
