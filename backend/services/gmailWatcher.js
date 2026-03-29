@@ -36,7 +36,13 @@ function getGmailClient() {
     if (newTokens.refresh_token) saved.refresh_token = newTokens.refresh_token;
     saved.access_token = newTokens.access_token;
     saved.expiry_date = newTokens.expiry_date;
-    fs.writeFileSync(TOKENS_PATH, JSON.stringify(saved, null, 2));
+    const tokenStr = JSON.stringify(saved, null, 2);
+    fs.writeFileSync(TOKENS_PATH, tokenStr);
+    
+    // Auto-update db so Railway persists new credentials across container restarts!
+    try {
+      db.prepare('UPDATE companies SET gmail_tokens = ? WHERE id = 1').run(tokenStr);
+    } catch(e) {}
   });
 
   return google.gmail({ version: 'v1', auth: oauth2Client });
@@ -159,7 +165,7 @@ async function processGmailMessage(gmail, message, companyId, config) {
   const existing = db.prepare(
     'SELECT id FROM emails WHERE company_id = ? AND from_email = ? AND subject = ?'
   ).get(companyId, emailData.from_email, emailData.subject);
-  if (existing) return;
+  if (existing) return false;
 
   // 1. Score via IA
   const scoring = await scoreEmail(emailData, config);
@@ -196,6 +202,7 @@ async function processGmailMessage(gmail, message, companyId, config) {
 
   // 5. Mark as read
   await markAsRead(gmail, emailData.messageId);
+  return true;
 }
 
 /**
@@ -217,8 +224,16 @@ async function startGmailWatcher(companyId) {
       if (messages.length > 0) {
         console.log(`\n📬 ${messages.length} nouveau(x) email(s) détecté(s) :`);
         const chronological = messages.slice().reverse();
+        let addedCount = 0;
         for (const msg of chronological) {
-          await processGmailMessage(gmail, msg, companyId, config);
+          const inserted = await processGmailMessage(gmail, msg, companyId, config);
+          if (inserted) addedCount++;
+        }
+        
+        // Log the batch processing activity
+        if (addedCount > 0) {
+           db.prepare('INSERT INTO activity_log (company_id, action, detail) VALUES (?, ?, ?)')
+             .run(companyId, 'watcher_batch', `IA a analysé et qualifié ${addedCount} nouveaux emails sur ${messages.length} importés.`);
         }
       }
 
