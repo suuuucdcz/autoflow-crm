@@ -604,9 +604,96 @@ async function openContactPanel(lead) {
 }
 
 // ===========================
+// SCHEDULER (Planificateur IA)
+// ===========================
+async function loadScheduler() {
+  const suggestCount = document.getElementById('sched-suggest-count');
+  const confirmCount = document.getElementById('sched-confirm-count');
+  const suggestList = document.getElementById('sched-suggest-list');
+  const confirmList = document.getElementById('sched-confirm-list');
+  
+  if (!suggestList || !confirmList) return;
+
+  try {
+    const data = await api(`/companies/${COMPANY_ID}/scheduler`);
+    const { suggested, confirmed } = data;
+    
+    suggestCount.textContent = suggested.length;
+    confirmCount.textContent = confirmed.length;
+    
+    // Render suggested
+    if (suggested.length === 0) {
+      suggestList.innerHTML = `<div style="color: #86868b; font-size: 14px; text-align: center; padding: 24px;">Aucune nouvelle suggestion de l'IA.</div>`;
+    } else {
+      suggestList.innerHTML = suggested.map(m => `
+        <div style="border: 1px solid #e5e5ea; border-radius: 12px; padding: 16px; background: #fafafa;">
+          <div style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">${m.title || 'Rendez-vous'}</div>
+          <div style="font-size: 13px; color: #86868b; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="clock" style="width: 14px; height: 14px;"></i> ${new Date(m.start_time).toLocaleString('fr-FR', { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}
+          </div>
+          <div style="font-size: 14px; margin-bottom: 16px;">
+            Avec <strong>${m.lead_name || 'Prospect'}</strong> (${m.lead_email || 'Email non fourni'})
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button onclick="confirmMeeting(${m.id})" style="flex: 1; padding: 8px; background: #34c759; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;"><i data-lucide="check" style="width: 16px; height: 16px;"></i> Valider</button>
+            <button onclick="rejectMeeting(${m.id})" style="padding: 8px 12px; background: white; border: 1px solid #d1d1d6; color: #ff3b30; border-radius: 6px; font-weight: 500; cursor: pointer;"><i data-lucide="x" style="width: 16px; height: 16px;"></i></button>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // Render confirmed
+    if (confirmed.length === 0) {
+      confirmList.innerHTML = `<div style="color: #86868b; font-size: 14px; text-align: center; padding: 24px;">Agenda parfaitement à jour.</div>`;
+    } else {
+      confirmList.innerHTML = confirmed.map(m => `
+        <div style="border-left: 4px solid #34c759; border-radius: 8px; padding: 14px; background: #fdfdfd; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+          <div style="font-weight: 600; font-size: 14px;">${m.title || 'Rendez-vous'}</div>
+          <div style="font-size: 13px; color: #86868b; margin-top: 4px;">
+            ${new Date(m.start_time).toLocaleString('fr-FR', { weekday:'long', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}
+          </div>
+          <div style="font-size: 13px; margin-top: 8px;">
+            <strong>${m.lead_name}</strong>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    if (window.lucide) lucide.createIcons();
+  } catch (err) {
+    console.error('Erreur chargement scheduler:', err);
+  }
+}
+
+window.confirmMeeting = async function(id) {
+  try {
+    const res = await api(`/companies/${COMPANY_ID}/scheduler/${id}/confirm`, { method: 'POST' });
+    if (res.error) {
+      alert("Erreur: " + res.error);
+    } else {
+      loadScheduler();
+      alert("✅ Rendez-vous ajouté avec succès à votre Google Agenda !");
+    }
+  } catch (e) {
+    alert("Erreur réseau: " + e.message);
+  }
+};
+
+window.rejectMeeting = async function(id) {
+  if (!confirm("Voulez-vous rejeter cette suggestion ?")) return;
+  try {
+    const res = await api(`/companies/${COMPANY_ID}/scheduler/${id}/reject`, { method: 'POST' });
+    if (!res.error) loadScheduler();
+  } catch (e) {}
+};
+
+// ===========================
 // CONFIG (API-driven)
 // ===========================
 async function loadConfig() {
+  // Init sections
+  loadCompanyStats();
+  loadScheduler();
   // Logout
   document.getElementById('btn-logout').addEventListener('click', () => {
     localStorage.removeItem('auth_token');
@@ -750,7 +837,10 @@ document.addEventListener('DOMContentLoaded', () => {
 function init() {
   initNav();
   initSidebar();
-  initCounters();
+  initCounters(); // demo
+  
+  const btnRefreshSch = document.getElementById('btn-refresh-scheduler');
+  if (btnRefreshSch) btnRefreshSch.addEventListener('click', loadScheduler);
   initTabs();
   initAI();
   initDate();

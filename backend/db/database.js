@@ -65,10 +65,27 @@ db.exec(`
     FOREIGN KEY (lead_id) REFERENCES leads(id)
   );
 
+  CREATE TABLE IF NOT EXISTS meetings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    company_id INTEGER NOT NULL,
+    lead_id INTEGER,
+    email_id INTEGER,
+    title TEXT,
+    start_time TEXT,
+    end_time TEXT,
+    status TEXT DEFAULT 'suggested', -- suggested, confirmed, dismissed
+    google_event_id TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (company_id) REFERENCES companies(id),
+    FOREIGN KEY (lead_id) REFERENCES leads(id),
+    FOREIGN KEY (email_id) REFERENCES emails(id)
+  );
+
   CREATE INDEX IF NOT EXISTS idx_emails_company ON emails(company_id);
   CREATE INDEX IF NOT EXISTS idx_leads_company ON leads(company_id);
   CREATE INDEX IF NOT EXISTS idx_leads_stage ON leads(company_id, stage);
   CREATE INDEX IF NOT EXISTS idx_activity_company ON activity_log(company_id);
+  CREATE INDEX IF NOT EXISTS idx_meetings_company ON meetings(company_id);
 `);
 
 // Simple migration for existing DBs

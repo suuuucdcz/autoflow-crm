@@ -15,28 +15,30 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
  */
 async function scoreEmail(email, config) {
   const keywords = config.keywords || [];
-  const prompt = `Tu es un assistant commercial expert en qualification de leads B2B.
+  const currentDate = new Date().toISOString(); 
+  const currentDay = new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+  const prompt = `Tu es un assistant commercial expert en qualification de leads B2B. Aujoud'hui nous sommes le ${currentDay} (${currentDate}).
 
 Analyse cet email et retourne un JSON avec exactement ces champs :
 - "score": un entier de 0 à 100 indiquant la probabilité que l'email nécessite une action (commerciale ou pro)
-- "tag": "lead" (pour les opportunités, envois de fichiers, devis, échanges humains), "support" (pour l'aide technique), ou "spam" (STRICTEMENT réservé aux pubs, newsletters, promotions, et robots)
+- "tag": "lead" (opportunité, rdv, devis), "support" (bug, aide technique), ou "spam" (STRICTEMENT réservé aux pubs, newsletters, promotions, et robots)
 - "reason": une courte explication en français (max 20 mots)
+- "appointment_suggestion": si le prospect propose EXACTEMENT ou IMPLICITEMENT un rendez-vous (ex: "on s'appelle demain", "dispo mardi à 14h"), fournis un objet avec { "title": "Rendez-vous avec ${email.from_name}", "start_time": "YYYY-MM-DDTHH:MM:SS", "end_time": "YYYY-MM-DDTHH:MM:SS" (ajoute 30 minutes au start_time) }. Si aucune heure n'est trouvée (ex: "demain matin"), choisis arbitrairement une heure cohérente (ex: 10:00). S'il n'y a STRICTEMENT AUCUNE volonté de rdv, renvoie null pour ce champ.
 
 Règles de qualification :
-1. Score élevé (80-100) : Vrai prospect commercial, demande de devis, de tarifs, de démo. ${keywords.length > 0 ? `Présence des mots-clés de l'entreprise : ${keywords.join(', ')}.` : ''}
-2. Score moyen (30-79) : Échange professionnel "classique", humain, envoi de fichiers (design, maquette, contrat) sans demande explicite. L'email de votre ami contenant une vidéo "motion design" rentre ici ! Taggez-le "lead".
-3. Score très bas (0-20) et tag "spam" : UNIQUEMENT pour les newsletters automatiques (promos, offres, -50%), les bots (noreply), ou les démarcheurs à froid agressifs.
-
-Attention critique : Un email provenant d'un vrai nom humain avec un sujet professionnel (ex: "Autoflow motion design") mais un corps vide N'EST PAS UN SPAM ! C'est souvent un collègue qui envoie une pièce jointe ou un lien. Ne le tagguez pas en "spam" !
+1. Score élevé (80-100) : Vrai prospect commercial, demande de rdv, devis, etc. ${keywords.length > 0 ? `Mots-clés : ${keywords.join(', ')}.` : ''}
+2. Score moyen (30-79) : Échange "classique" humain, relance ou envoi de fichiers. L'email de votre ami contenant une vidéo rentre ici ! Taggez "lead".
+3. Score très bas (0-20) et tag "spam" : UNIQUEMENT pour les newsletters (promos) ou robots (noreply).
 
 Email à analyser :
 ---
 De : ${email.from_name} <${email.from_email}>
 Objet : ${email.subject}
-Corps : ${email.body || email.snippet || '(Message vide : présence très probable d\'une pièce jointe ou simple transfert)'}
+Corps : ${email.body || email.snippet || '(Message vide)'}
 ---
 
-Réponds UNIQUEMENT en JSON valide, sans markdown, sans explication :`;
+Réponds UNIQUEMENT en JSON valide, sans markdown :`;
 
   try {
     const chat = await groq.chat.completions.create({
@@ -57,6 +59,7 @@ Réponds UNIQUEMENT en JSON valide, sans markdown, sans explication :`;
       score: Math.min(100, Math.max(0, parseInt(result.score) || 0)),
       tag: ['lead', 'support', 'spam'].includes(parsedTag) ? parsedTag : 'lead',
       reason: result.reason || '',
+      appointment_suggestion: result.appointment_suggestion || null,
     };
   } catch (err) {
     console.error('Scorer error:', err.message);

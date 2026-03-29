@@ -15,6 +15,7 @@ const companiesRoutes = require('./routes/companies');
 const emailsRoutes = require('./routes/emails');
 const leadsRoutes = require('./routes/leads');
 const activityRoutes = require('./routes/activity');
+const schedulerRoutes = require('./routes/scheduler');
 
 // Import services
 const { scoreEmail } = require('./services/scorer');
@@ -69,6 +70,7 @@ app.use('/api/companies', companiesRoutes);
 app.use('/api/companies', emailsRoutes);
 app.use('/api/companies', leadsRoutes);
 app.use('/api/companies', activityRoutes);
+app.use('/api/companies/:id/scheduler', schedulerRoutes);
 
 // ==============================
 // Gmail OAuth (browser-based)
@@ -94,6 +96,7 @@ app.get('/auth/gmail', (req, res) => {
       'https://www.googleapis.com/auth/gmail.readonly',
       'https://www.googleapis.com/auth/gmail.modify',
       'https://www.googleapis.com/auth/userinfo.email',
+      'https://www.googleapis.com/auth/calendar.events',
     ],
     prompt: 'consent',
     state: String(companyId),

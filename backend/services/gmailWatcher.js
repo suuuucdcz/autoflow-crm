@@ -197,6 +197,19 @@ async function processGmailMessage(gmail, message, companyId, config) {
         'INSERT INTO activity_log (company_id, lead_id, action, detail) VALUES (?, ?, ?, ?)'
       ).run(companyId, leadResult.lastInsertRowid, 'notification_sent', 'Lead chaud — équipe notifiée');
     }
+
+    // 5. Save appointment suggestion if present
+    if (scoring.appointment_suggestion) {
+      const apt = scoring.appointment_suggestion;
+      db.prepare(`
+        INSERT INTO meetings (company_id, lead_id, email_id, title, start_time, end_time, status)
+        VALUES (?, ?, ?, ?, ?, ?, 'suggested')
+      `).run(companyId, leadResult.lastInsertRowid, emailResult.lastInsertRowid, apt.title, apt.start_time, apt.end_time);
+      
+      db.prepare(
+        'INSERT INTO activity_log (company_id, lead_id, action, detail) VALUES (?, ?, ?, ?)'
+      ).run(companyId, leadResult.lastInsertRowid, 'meeting_suggested', `L'IA a détecté une proposition de rendez-vous : ${apt.start_time}`);
+    }
   }
 
   // 5. Mark as read

@@ -847,7 +847,37 @@
 
     </div>
     <div class="page" id="page-emails"><div class="ph"><i data-lucide="mail" class="ph-ic"></i><h2>Emails</h2><p>Campagnes email, templates et séquences automatisées.</p><span class="ph-tag">Backend à venir</span></div></div>
-    <div class="page" id="page-scheduler"><div class="ph"><i data-lucide="calendar" class="ph-ic"></i><h2>Planificateur</h2><p>Planifiez vos automatisations sur des créneaux précis.</p><span class="ph-tag">Backend à venir</span></div></div>
+    <div class="page" id="page-scheduler">
+      <div class="greeting">
+        <div>
+          <h2 class="greeting-title">Planificateur IA</h2>
+          <p class="greeting-sub">Suggestions de rendez-vous générées à partir de vos emails et agenda confirmé.</p>
+        </div>
+        <button class="cp-btn primary" id="btn-refresh-scheduler"><i data-lucide="refresh-cw"></i> Rafraîchir</button>
+      </div>
+      
+      <div style="display: flex; gap: 24px; margin-top: 24px; flex-wrap: wrap;">
+        <!-- SUGGESTIONS COLUMN -->
+        <div style="flex: 1; min-width: 300px; background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #e5e5ea;">
+          <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="sparkles" style="color: #a855f7;"></i> À valider <span id="sched-suggest-count" style="background: #f3e8ff; color: #a855f7; border-radius: 12px; padding: 2px 8px; font-size: 12px;">0</span>
+          </h3>
+          <div id="sched-suggest-list" style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="color: #86868b; font-size: 14px; text-align: center; padding: 24px;">Aucune nouvelle suggestion de l'IA.</div>
+          </div>
+        </div>
+        
+        <!-- UPCOMING MEETINGS COLUMN -->
+        <div style="flex: 1; min-width: 300px; background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #e5e5ea;">
+          <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="calendar-check" style="color: #34c759;"></i> Rendez-vous confirmés <span id="sched-confirm-count" style="background: #e1f7e6; color: #34c759; border-radius: 12px; padding: 2px 8px; font-size: 12px;">0</span>
+          </h3>
+          <div id="sched-confirm-list" style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="color: #86868b; font-size: 14px; text-align: center; padding: 24px;">Agenda parfaitement à jour.</div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="page" id="page-clients"><div class="ph"><i data-lucide="building-2" class="ph-ic"></i><h2>Clients</h2><p>Gérez vos clients, contrats et accès.</p><span class="ph-tag">Backend à venir</span></div></div>
     <div class="page" id="page-settings"><div class="ph"><i data-lucide="settings" class="ph-ic"></i><h2>Paramètres</h2><p>Configuration du compte, API, sécurité et notifications.</p><span class="ph-tag">Backend à venir</span></div></div>
 
