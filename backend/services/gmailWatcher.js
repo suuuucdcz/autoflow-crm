@@ -52,8 +52,8 @@ function getGmailClient() {
  * Fetch unread emails from Gmail
  */
 async function fetchNewEmails(gmail) {
-  // Build query: unread emails, optionally after a timestamp
-  let query = 'is:unread category:primary';
+  // Build query: unread emails in inbox, optionally after a timestamp
+  let query = 'in:inbox is:unread';
   if (lastCheckTime) {
     const after = Math.floor(lastCheckTime / 1000);
     query += ` after:${after}`;
