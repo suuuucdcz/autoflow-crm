@@ -801,10 +801,19 @@
             <div class="cp-event"><div class="cp-ev-dot green"></div><div class="cp-ev-body"><strong>Slack notifié</strong> · #leads-chauds<br><span>Il y a 10 min</span></div></div>
           </div>
         </div>
-        <div class="cp-actions">
-          <button class="cp-btn primary"><i data-lucide="send"></i> Répondre</button>
+        <div class="cp-actions" id="cp-action-buttons">
+          <button class="cp-btn primary" id="btn-cp-reply"><i data-lucide="send"></i> Répondre</button>
           <button class="cp-btn"><i data-lucide="calendar"></i> Planifier</button>
-          <button class="cp-btn"><i data-lucide="archive"></i> Archiver</button>
+          <button class="cp-btn" id="btn-cp-archive"><i data-lucide="archive"></i> Archiver</button>
+        </div>
+        
+        <div class="cp-reply-box" id="cp-reply-box" style="display: none; padding: 16px; border-top: 1px solid #e5e5ea; background: #fff;">
+          <textarea id="ai-reply-text" rows="6" style="width: 100%; padding: 12px; border: 1px solid #d1d1d6; border-radius: 8px; font-family: inherit; font-size: 14px; margin-bottom: 12px; resize: vertical;" placeholder="Votre réponse ou laissez l'IA rédiger..."></textarea>
+          <div class="cp-reply-actions" style="display: flex; gap: 8px; flex-wrap: wrap;">
+             <button class="cp-btn" id="btn-ai-draft" style="background: linear-gradient(135deg, #a855f7, #ec4899); color: white; border: none;"><i data-lucide="sparkles"></i> ✨ Rédiger via IA</button>
+             <button class="cp-btn primary" id="btn-ai-send"><i data-lucide="send"></i> Envoyer (Gmail)</button>
+             <button class="cp-btn" id="btn-ai-cancel">Annuler</button>
+          </div>
         </div>
       </div>
 

@@ -32,6 +32,7 @@ db.exec(`
     score INTEGER DEFAULT 0,
     tag TEXT DEFAULT 'lead',
     read INTEGER DEFAULT 0,
+    thread_id TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (company_id) REFERENCES companies(id)
   );
@@ -69,5 +70,12 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_leads_stage ON leads(company_id, stage);
   CREATE INDEX IF NOT EXISTS idx_activity_company ON activity_log(company_id);
 `);
+
+// Simple migration for existing DBs
+try {
+  db.exec('ALTER TABLE emails ADD COLUMN thread_id TEXT');
+} catch(e) {
+  // Column exists
+}
 
 module.exports = db;

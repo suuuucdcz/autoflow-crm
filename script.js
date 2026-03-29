@@ -398,16 +398,37 @@ async function loadPipeline() {
 
 // ===========================
 // CONTACT PANEL (API-driven)
-// ===========================
+async function openContactByEmail(email) {
+  // Find the lead matching this email
+  const leads = await api(`/companies/${COMPANY_ID}/leads`);
+  const match = leads.find(l => l.email === email.from_email);
+  if (match) {
+    match.viewed_email_id = email.id;
+    openContactPanel(match);
+  } else {
+    // Show email info as a pseudo-lead
+    const pseudoLead = {
+      id: null, email_id: email.id, name: email.from_name, email: email.from_email,
+      company_name: '', city: '', score: email.score, phone: ''
+    };
+    openContactPanel(pseudoLead);
+  }
+}
+
+let activeContactEmailId = null;
+let activeContactLeadId = null;
+
 async function openContactPanel(lead) {
   const panel = document.getElementById('contact-panel');
   if (!panel) return;
 
+  // Track the email id for replying (prefer specifically viewed email, fallback to lead's source email)
+  activeContactEmailId = lead.viewed_email_id || lead.email_id || lead.source_email_id || null;
+  activeContactLeadId = lead.id;
+
   // Fetch full lead detail with activity
   let fullLead;
-  try {
-    fullLead = await api(`/companies/${COMPANY_ID}/leads/${lead.id}`);
-  } catch { fullLead = lead; }
+  try { fullLead = await api(`/companies/${COMPANY_ID}/leads/${lead.id}`); } catch { fullLead = lead; }
 
   panel.querySelector('.cp-avatar').textContent = initials(lead.name);
   panel.querySelector('.cp-name').textContent = lead.name;
@@ -442,23 +463,16 @@ async function openContactPanel(lead) {
     }
   }
 
+  // Reset reply box UI state when opening a new contact
+  const actions = document.getElementById('cp-action-buttons');
+  const replyBox = document.getElementById('cp-reply-box');
+  const textArea = document.getElementById('ai-reply-text');
+  if (actions) actions.style.display = 'flex';
+  if (replyBox) replyBox.style.display = 'none';
+  if (textArea) textArea.value = '';
+
   if (window.lucide) lucide.createIcons();
   panel.classList.add('open');
-}
-
-async function openContactByEmail(email) {
-  // Find the lead matching this email
-  const leads = await api(`/companies/${COMPANY_ID}/leads`);
-  const match = leads.find(l => l.email === email.from_email);
-  if (match) {
-    openContactPanel(match);
-  } else {
-    // Show email info as a pseudo-lead
-    openContactPanel({
-      id: null, name: email.from_name, email: email.from_email,
-      company_name: '', city: '', score: email.score, phone: ''
-    });
-  }
 }
 
 // ===========================

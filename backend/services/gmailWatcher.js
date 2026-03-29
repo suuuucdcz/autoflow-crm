@@ -141,6 +141,7 @@ function parseGmailMessage(message) {
     snippet: message.snippet || '',
     body: body.substring(0, 2000),
     received_at: receivedAt,
+    threadId: message.threadId || '',
   };
 }
 
@@ -170,11 +171,11 @@ async function processGmailMessage(gmail, message, companyId, config) {
   // 1. Score via IA
   const scoring = await scoreEmail(emailData, config);
 
-  // 2. Save to DB with real received date
+  // 2. Save to DB with real received date and threadId
   const emailResult = db.prepare(`
-    INSERT INTO emails (company_id, from_name, from_email, subject, snippet, body, score, tag, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(companyId, emailData.from_name, emailData.from_email, emailData.subject, emailData.snippet, emailData.body, scoring.score, scoring.tag, emailData.received_at || new Date().toISOString().replace('T', ' ').substring(0, 19));
+    INSERT INTO emails (company_id, from_name, from_email, subject, snippet, body, score, tag, thread_id, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(companyId, emailData.from_name, emailData.from_email, emailData.subject, emailData.snippet, emailData.body, scoring.score, scoring.tag, emailData.threadId, emailData.received_at || new Date().toISOString().replace('T', ' ').substring(0, 19));
 
   console.log(`  📩 ${emailData.from_name} — Score ${scoring.score} (${scoring.tag}) — "${emailData.subject}"`);
 
