@@ -615,6 +615,99 @@ document.addEventListener('DOMContentLoaded', () => {
   initAI();
   initDate();
   initCRM();
+
+  // ==========================
+  // AI REPLY ACTIONS
+  // ==========================
+  const btnCpReply = document.getElementById('btn-cp-reply');
+  const btnCpArchive = document.getElementById('btn-cp-archive');
+  const btnAiCancel = document.getElementById('btn-ai-cancel');
+  const btnAiDraft = document.getElementById('btn-ai-draft');
+  const btnAiSend = document.getElementById('btn-ai-send');
+  
+  if (btnCpReply) {
+    btnCpReply.addEventListener('click', () => {
+      document.getElementById('cp-action-buttons').style.display = 'none';
+      document.getElementById('cp-reply-box').style.display = 'block';
+    });
+  }
+
+  if (btnAiCancel) {
+    btnAiCancel.addEventListener('click', () => {
+      document.getElementById('cp-action-buttons').style.display = 'flex';
+      document.getElementById('cp-reply-box').style.display = 'none';
+      document.getElementById('ai-reply-text').value = '';
+    });
+  }
+
+  if (btnCpArchive) {
+    btnCpArchive.addEventListener('click', async () => {
+      btnCpArchive.innerHTML = 'Archivage...';
+      if (activeContactLeadId) {
+        await api(`/companies/${COMPANY_ID}/leads/${activeContactLeadId}`, {
+          method: 'PUT', body: JSON.stringify({ stage: 'archived' })
+        });
+      }
+      document.getElementById('contact-panel').classList.remove('open');
+      btnCpArchive.innerHTML = '<i data-lucide="archive"></i> Archiver';
+      if (window.lucide) lucide.createIcons();
+      loadPipeline();
+      loadInbox('all');
+    });
+  }
+
+  if (btnAiDraft) {
+    btnAiDraft.addEventListener('click', async () => {
+      if (!activeContactEmailId) return alert('Erreur : Email source introuvable.');
+      
+      const txt = document.getElementById('ai-reply-text');
+      txt.value = "L'IA analyse le contexte et rédige la réponse...";
+      txt.style.opacity = '0.5';
+      
+      try {
+        const res = await api(`/companies/${COMPANY_ID}/emails/${activeContactEmailId}/draft-reply`, { method: 'POST' });
+        if (res.draft) {
+          txt.value = res.draft;
+        } else {
+          txt.value = 'Erreur lors de la rédaction.';
+        }
+      } catch (err) {
+        txt.value = 'Erreur: ' + err.message;
+      }
+      txt.style.opacity = '1';
+    });
+  }
+
+  if (btnAiSend) {
+    btnAiSend.addEventListener('click', async () => {
+      if (!activeContactEmailId) return alert('Erreur : Email source introuvable.');
+      
+      const txt = document.getElementById('ai-reply-text').value;
+      if (!txt) return alert('Veuillez écrire un message.');
+      
+      const origHtml = btnAiSend.innerHTML;
+      btnAiSend.innerHTML = 'Envoi Gmail en cours...';
+      try {
+        await api(`/companies/${COMPANY_ID}/emails/${activeContactEmailId}/send-reply`, {
+          method: 'POST', body: JSON.stringify({ text: txt })
+        });
+        alert('✅ Réponse envoyée avec succès via Gmail !');
+        document.getElementById('cp-action-buttons').style.display = 'flex';
+        document.getElementById('cp-reply-box').style.display = 'none';
+        document.getElementById('ai-reply-text').value = '';
+        
+        // Refresh contact panel if possible
+        if (activeContactLeadId) {
+          openContactPanel({ id: activeContactLeadId }); 
+        }
+      } catch (err) {
+        alert('Erreur lors de l\'envoi : ' + err.message);
+      }
+      btnAiSend.innerHTML = origHtml;
+      if (window.lucide) lucide.createIcons();
+    });
+  }
+
   // Render Lucide icons
   if (window.lucide) lucide.createIcons();
 });
