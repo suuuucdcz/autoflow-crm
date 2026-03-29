@@ -692,7 +692,6 @@ window.rejectMeeting = async function(id) {
 // ===========================
 async function loadConfig() {
   // Init sections
-  loadCompanyStats();
   loadScheduler();
   // Logout
   document.getElementById('btn-logout').addEventListener('click', () => {
