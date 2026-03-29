@@ -13,7 +13,7 @@ router.get('/:id/emails', (req, res) => {
     params.push(tag);
   }
 
-  query += ' ORDER BY created_at DESC';
+  query += ' ORDER BY created_at DESC, id DESC';
   const rows = db.prepare(query).all(...params);
   res.json(rows);
 });

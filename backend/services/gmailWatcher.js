@@ -216,7 +216,8 @@ async function startGmailWatcher(companyId) {
       const messages = await fetchNewEmails(gmail);
       if (messages.length > 0) {
         console.log(`\n📬 ${messages.length} nouveau(x) email(s) détecté(s) :`);
-        for (const msg of messages) {
+        const chronological = messages.slice().reverse();
+        for (const msg of chronological) {
           await processGmailMessage(gmail, msg, companyId, config);
         }
       }

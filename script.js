@@ -165,7 +165,11 @@ function initials(name) {
 }
 
 function timeAgo(dateStr) {
-  const diff = Date.now() - new Date(dateStr).getTime();
+  let dStr = dateStr;
+  if (dStr && !dStr.includes('T')) {
+    dStr = dStr.replace(' ', 'T') + 'Z';
+  }
+  const diff = Date.now() - new Date(dStr).getTime();
   const m = Math.floor(diff / 60000);
   if (m < 1) return "À l'instant";
   if (m < 60) return `Il y a ${m} min`;
