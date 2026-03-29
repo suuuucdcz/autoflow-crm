@@ -143,11 +143,19 @@ app.get('/auth/gmail/callback', async (req, res) => {
 });
 
 // Check Gmail connection status
-app.get('/api/companies/:id/gmail-status', (req, res) => {
+app.get('/api/companies/:id/gmail-status', async (req, res) => {
   const company = db.prepare('SELECT gmail_tokens FROM companies WHERE id = ?').get(req.params.id);
   if (company && company.gmail_tokens) {
     const tokens = JSON.parse(company.gmail_tokens);
-    res.json({ connected: true, email: tokens.email });
+    try {
+      const oauth2Client = getOAuth2Client();
+      oauth2Client.setCredentials(tokens);
+      await oauth2Client.getAccessToken();
+      res.json({ connected: true, email: tokens.email });
+    } catch (e) {
+      console.error('Statut Gmail: Jeton expiré ou invalide');
+      res.json({ connected: false, error: 'Jeton expiré' });
+    }
   } else {
     res.json({ connected: false });
   }
