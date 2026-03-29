@@ -23,7 +23,7 @@ Analyse cet email et retourne un JSON avec exactement ces champs :
 - "reason": une courte explication en français (max 20 mots)
 
 Critères de scoring élevé (80-100) :
-- Mention de mots-clés prioritaires : ${keywords.join(', ')}
+${keywords.length > 0 ? `- Mention de mots-clés prioritaires : ${keywords.join(', ')}` : ''}
 - Demande de démo, de tarifs, ou d'informations commerciales
 - Entreprise identifiable (nom de société dans la signature)
 - Ton professionnel, besoin exprimé clairement
@@ -51,12 +51,15 @@ Réponds UNIQUEMENT en JSON valide, sans markdown, sans explication :`;
       response_format: { type: 'json_object' },
     });
 
-    const raw = chat.choices[0]?.message?.content || '{}';
+    let raw = chat.choices[0]?.message?.content || '{}';
+    // Clean potential markdown around the output despite json_object mode
+    raw = raw.replace(/^```[a-z]*\s*/i, '').replace(/\s*```$/i, '').trim();
     const result = JSON.parse(raw);
 
+    const parsedTag = (result.tag || '').toLowerCase();
     return {
       score: Math.min(100, Math.max(0, parseInt(result.score) || 0)),
-      tag: ['lead', 'support', 'spam'].includes(result.tag) ? result.tag : 'lead',
+      tag: ['lead', 'support', 'spam'].includes(parsedTag) ? parsedTag : 'lead',
       reason: result.reason || '',
     };
   } catch (err) {

@@ -91,13 +91,24 @@ function parseGmailMessage(message) {
 
   // Get body text
   let body = '';
+  let htmlBody = '';
   const getTextBody = (part) => {
     if (part.mimeType === 'text/plain' && part.body?.data) {
-      body = Buffer.from(part.body.data, 'base64').toString('utf-8');
+      body += Buffer.from(part.body.data.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf-8') + '\n';
+    } else if (part.mimeType === 'text/html' && part.body?.data) {
+      htmlBody += Buffer.from(part.body.data.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf-8') + '\n';
     }
     if (part.parts) part.parts.forEach(getTextBody);
   };
   getTextBody(message.payload);
+
+  if (!body && htmlBody) {
+    body = htmlBody.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+                   .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+                   .replace(/<[^>]+>/g, ' ')
+                   .replace(/\s+/g, ' ')
+                   .trim();
+  }
 
   // Fallback to snippet
   if (!body) body = message.snippet || '';
