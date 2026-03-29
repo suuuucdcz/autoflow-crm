@@ -382,13 +382,22 @@ async function openContactPanel(lead) {
 
   // Activity timeline
   const timeline = panel.querySelector('.cp-timeline');
-  if (timeline && fullLead.activity && fullLead.activity.length) {
-    timeline.innerHTML = fullLead.activity.map(a => `
-      <div class="cp-event">
-        <div class="cp-ev-dot ${a.action.includes('notif') ? 'green' : 'blue'}"></div>
-        <div class="cp-ev-body"><strong>${a.action.replace(/_/g, ' ')}</strong> · ${a.detail || ''}<br><span>${timeAgo(a.created_at)}</span></div>
-      </div>
-    `).join('');
+  if (timeline) {
+    if (fullLead.activity && fullLead.activity.length) {
+      timeline.innerHTML = fullLead.activity.map(a => `
+        <div class="cp-event">
+          <div class="cp-ev-dot ${a.action.includes('notif') ? 'green' : 'blue'}"></div>
+          <div class="cp-ev-body"><strong>${a.action.replace(/_/g, ' ')}</strong> · ${a.detail || ''}<br><span>${timeAgo(a.created_at)}</span></div>
+        </div>
+      `).join('');
+    } else {
+      timeline.innerHTML = `
+        <div class="cp-event">
+          <div class="cp-ev-dot green"></div>
+          <div class="cp-ev-body"><strong>IA : Email analysé</strong> · Score exact : ${lead.score}<br><span>Terminé</span></div>
+        </div>
+      `;
+    }
   }
 
   if (window.lucide) lucide.createIcons();
