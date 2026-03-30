@@ -4,7 +4,10 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const Groq = require('groq-sdk');
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+let groq = null;
+if (process.env.GROQ_API_KEY) {
+  groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+}
 
 /**
  * Draft a professional reply to a lead's email using Groq.
