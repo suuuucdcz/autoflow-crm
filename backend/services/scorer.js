@@ -5,7 +5,10 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const Groq = require('groq-sdk');
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+let groq = null;
+if (process.env.GROQ_API_KEY) {
+  groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+}
 
 /**
  * Score an email and classify it
@@ -39,6 +42,8 @@ Corps : ${email.body || email.snippet || '(Message vide)'}
 ---
 
 Réponds UNIQUEMENT en JSON valide, sans markdown :`;
+
+  if (!groq) return fallbackScore(email, config);
 
   try {
     const chat = await groq.chat.completions.create({
